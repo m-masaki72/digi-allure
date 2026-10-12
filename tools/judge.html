@@ -145,10 +145,16 @@ function loadCSV(text, persist) {
     if (!fields.includes(need)) return alert(`列 ${need} がありません`);
   }
   rows = table.slice(1).map((cols) => Object.fromEntries(fields.map((k, i) => [k, cols[i] ?? ""])));
-  saved = JSON.parse(localStorage.getItem(LS_STATUS) || "{}");
-  // localStorage の判定を優先して反映
-  for (const r of rows) if (saved[keyOf(r)]) r.status = saved[keyOf(r)];
-  if (persist) localStorage.setItem(LS_CSV, text);
+  if (persist) {
+    // 新しく開いたCSVを正とし、以前の判定途中データは破棄する
+    saved = {};
+    localStorage.removeItem(LS_STATUS);
+    localStorage.setItem(LS_CSV, text);
+  } else {
+    // 前回のCSVを復元するときだけ localStorage の判定を上乗せする
+    saved = JSON.parse(localStorage.getItem(LS_STATUS) || "{}");
+    for (const r of rows) if (saved[keyOf(r)]) r.status = saved[keyOf(r)];
+  }
   $("drop").hidden = true;
   buildFilters();
   render();

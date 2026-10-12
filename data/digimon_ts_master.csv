@@ -118,7 +118,7 @@
 117,キュウビモン,成熟期,データ,妖獣型,kyubimon,approved,,725420
 118,クロックモン,成熟期,データ,マシーン型,clockmon,excluded,,725421
 119,ケンタルモン,成熟期,データ,獣人型,centalmon,excluded,,725422
-120,サンフラウモン,成熟期,データ,植物型,sunflowmon,excluded,,725423
+120,サンフラウモン,成熟期,データ,植物型,sunflowmon,approved,,725423
 121,シードラモン,成熟期,データ,水棲型,seadramon,excluded,,725424
 122,シーラモン,成熟期,データ,古代魚型,coelamon,excluded,,725425
 123,シェルモン,成熟期,データ,軟体型,shellmon,excluded,,725426
@@ -209,7 +209,7 @@
 208,ケルベロモン,完全体,ワクチン,魔獣型,cerberumon,excluded,,725727
 209,ケルベロモンJM,完全体,ワクチン,魔人型,cerberumon_werewolfmode,excluded,,725726
 210,サイバードラモン,完全体,ワクチン,サイボーグ型,cyberdramon-xwars,excluded,,725725
-211,ジュエルビーモン,完全体,ワクチン,昆虫型,jewelbeemon,excluded,,725724
+211,ジュエルビーモン,完全体,ワクチン,昆虫型,jewelbeemon,approved,,725724
 212,ズドモン,完全体,ワクチン,海獣型,zudomon,excluded,,725723
 213,チィリンモン,完全体,ワクチン,聖獣型,tyilinmon,excluded,,725722
 214,デュラモン,完全体,ワクチン,武器型,duramon,excluded,,725721
@@ -264,7 +264,7 @@
 263,リリモン,完全体,データ,妖精型,lilimon,approved,,725674
 264,ロコモン,完全体,データ,マシーン型,locomon,excluded,,725673
 265,アスタモン,完全体,ウィルス,魔人型,astamon,excluded,,725672
-266,アルケニモン,完全体,ウィルス,魔獣型,archnemon,excluded,,725671
+266,アルケニモン,完全体,ウィルス,魔獣型,archnemon,approved,,725671
 267,ヴァンデモン,完全体,ウィルス,アンデッド型,vamdemon,excluded,,725670
 268,エテモン,完全体,ウィルス,パペット型,etemon,excluded,,725669
 269,オオクワモン,完全体,ウィルス,昆虫型,okuwamon,excluded,,725668
@@ -311,7 +311,7 @@
 311,ウェヌスモン,究極体,ワクチン,神人型,venusmon,approved,,725633
 312,ウォーグレイモン,究極体,ワクチン,竜人型,wargreymon,excluded,,725632
 313,オウリュウモン,究極体,ワクチン,獣竜型,ouryumon,excluded,,725631
-314,オファニモン,究極体,ワクチン,座天使型,ofanimon,excluded,,725630
+314,オファニモン,究極体,ワクチン,座天使型,ofanimon,approved,,725630
 315,クラヴィスエンジェモン,究極体,ワクチン,力天使型,clavisangemon,excluded,,725629
 316,クレニアムモン,究極体,ワクチン,聖騎士型,craniummon,excluded,,725628
 317,クロスモン,究極体,ワクチン,巨鳥型,crossmon,excluded,,725627
@@ -345,8 +345,8 @@
 345,クズハモン,究極体,データ,神人型,kuzuhamon,approved,,725602
 346,グランドロコモン,究極体,データ,マシーン型,grandlocomon,excluded,,725601
 347,グリフォモン,究極体,データ,幻獣型,griffomon,excluded,,725600
-348,ケレスモン,究極体,データ,神人型,ceresmon,excluded,,725599
-349,ケレスモンメディウム,究極体,データ,神人型,ceresmon,excluded,要確認:公式はケレスモンのみ,725598
+348,ケレスモン,究極体,データ,神人型,ceresmon,approved,,725599
+349,ケレスモンメディウム,究極体,データ,神人型,ceresmon,approved,要確認:公式はケレスモンのみ,725598
 350,サーベルレオモン,究極体,データ,古代獣型,saberleomon,excluded,,725597
 351,サクヤモン,究極体,データ,神人型,sakuyamon,approved,,725596
 352,ジエスモン,究極体,データ,聖騎士型,jesmon,excluded,,725595
