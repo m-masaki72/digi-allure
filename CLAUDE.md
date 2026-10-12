@@ -1,0 +1,42 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+非公式のお色気デジモン図鑑。画面・API・判定手順は `README.md`、方針・権利まわりは `docs/HANDOVER.md` を読む（HANDOVER の §4・§7 は初期時点の記述で、`directory_name` 未入力・全件 candidate などは現状と異なる）。
+
+## コマンド
+
+テスト・lint・ビルドツールはない。Python は標準ライブラリのみで、`python3 -I -X utf8` で実行する。
+
+```sh
+python3 -I -X utf8 scripts/build_data.py                    # CSV → site/data/digimon.json, db/seed.sql
+python3 -I -X utf8 scripts/set_status.py approved 314 349   # 図鑑No.指定で status を書き換え
+npx wrangler pages dev --port 8788                           # ローカル起動（事前準備は README「ローカルで動かす」）
+npx wrangler pages functions build --outdir <tmp>            # Functions のバンドル確認
+```
+
+## 全体像
+
+データは一方向に流れる: `data/digimon_ts_master.csv`（唯一の正）→ `scripts/build_data.py` → `site/data/digimon.json`（公開分のみ）と `db/seed.sql`（全件）→ D1。
+
+- `site/data/*.json` と `db/seed.sql` は生成物。手で編集せず、CSV を直して `build_data.py` を再実行する
+- CSV を書き換えるツール（`tools/judge.html`・`set_status.py`）は読み込んだヘッダーをそのまま書き戻す。列の追加は安全
+- 個体ごとの画像は CSV の `image_url` / `image_source` 列で上書きする。空なら公式画像を直リンクする
+- サイト内 ID は `directory_name`。同じ値が2回目に出た行は `{公式ID}--{game_no}` になり、公式画像は自動では付かない（別形態が公式IDを借りているため）
+- `seed.sql` は upsert なので、本番に再投入しても票・レーティングは消えない
+- 公開されるのは `status = 'approved'` の個体だけ。API 側も `isApproved()`（`lib/api.js`）で確認している
+
+フロントは `site/` のビルド不要な vanilla JS SPA（hash ルーティング）。API は `functions/api/` の Pages Functions で、共通処理は `lib/api.js`（Elo、対戦カードの HMAC 署名、日替わりソルトのハッシュ、JST の月区切り）。
+
+## 制約
+
+- `site/_headers` の CSP が厳しい: インラインの `style` / `<style>` / スクリプト、外部フォントと CDN は使えない。画像は `self`・`data:`・`https://digimon.net` のみ
+- Functions は `env.DB`（D1 binding 名 `DB`）と `env.VOTE_SECRET` を参照する。`wrangler d1 create` が出す binding 名の例に書き換えない
+- `VOTE_SECRET` は本番環境にしか登録していない（`wrangler pages secret put` はプレビュー環境を指定できない）。プレビューのデプロイでは投票が失敗する
+- 公式・Game8 の画像や説明文は転載しない（`docs/HANDOVER.md` §3）。公式画像は直リンク表示と出典ラベルだけにする
+
+## 運用
+
+- 個人アカウントで運用している（`user.name=m-masaki72`、remote は `git@github-personal:m-masaki72/digi-allure.git`）
+- `git push`・`wrangler pages deploy`・`--remote` 付きの D1 操作は本番に影響するので、ユーザーが実行する
+- 公開 URL: https://digi-allure.pages.dev（production ブランチは `master`）
