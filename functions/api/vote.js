@@ -1,4 +1,4 @@
-import { json, fail, scopeOf, verifyPair, clientIds, readJSON, monthKey, monthScope, dayStart, newRowId, ELO_K, DEFAULT_SCOPE } from "../../lib/api.js";
+import { json, fail, scopeOf, verifyPair, clientIds, readJSON, monthKey, monthScope, dayStart, newRowId, ELO_K, DEFAULT_SCOPE } from "../_lib/api.js";
 
 // IPあたりの上限。学校・会社など1つのIPを大勢で使う場合も考えて1日の上限はゆるめ
 const MAX_VOTES_PER_MINUTE = 30;

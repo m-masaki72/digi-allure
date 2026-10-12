@@ -1,4 +1,4 @@
-import { json, fail, clientIds, readJSON, dayStart } from "../../lib/api.js";
+import { json, fail, clientIds, readJSON, dayStart } from "../_lib/api.js";
 
 const MAX_REQUESTS_PER_HOUR = 10;
 const MAX_COMMENT = 200;

@@ -1,4 +1,4 @@
-import { fail } from "../../lib/api.js";
+import { fail } from "../_lib/api.js";
 
 // 書き込みは同じサイトからの JSON だけ受け付ける（他サイトのフォームや no-cors の fetch から投票させない）
 export async function onRequest({ request, next }) {

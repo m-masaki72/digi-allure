@@ -1,4 +1,4 @@
-import { json } from "../../../lib/api.js";
+import { json } from "../../_lib/api.js";
 
 // GET /api/tags  タグ定義と、公開中デジモンごとのタグ数
 export async function onRequestGet({ env }) {

@@ -1,4 +1,4 @@
-import { json, fail, clientIds, isApproved, readJSON, decodeParam, dayStart, newRowId } from "../../../lib/api.js";
+import { json, fail, clientIds, isApproved, readJSON, decodeParam, dayStart, newRowId } from "../../_lib/api.js";
 
 // IPあたりの上限
 const MAX_TAGS_PER_MINUTE = 60;

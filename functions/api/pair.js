@@ -1,4 +1,4 @@
-import { json, fail, scopeOf, signPair, clientIds, dayStart } from "../../lib/api.js";
+import { json, fail, scopeOf, signPair, clientIds, dayStart } from "../_lib/api.js";
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 

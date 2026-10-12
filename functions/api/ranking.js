@@ -1,4 +1,4 @@
-import { json, fail, scopeOf, monthKey, monthScope, monthRange, isMonthKey, DEFAULT_SCOPE } from "../../lib/api.js";
+import { json, fail, scopeOf, monthKey, monthScope, monthRange, isMonthKey, DEFAULT_SCOPE } from "../_lib/api.js";
 
 // GET /api/ranking?scope=time-stranger          通算
 // GET /api/ranking?month=2026-10 | current      月間人気投票（日本時間の暦月）
