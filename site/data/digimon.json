@@ -594,8 +594,8 @@
   "attribute": "データ",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/ceresmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "sakuyamon",
