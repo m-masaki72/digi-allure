@@ -53,6 +53,7 @@ def main():
         time.sleep(WAIT_SEC)
 
     out = os.path.abspath(OUT)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(out), suffix=".csv")
     with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["directory_name", "name", "level"])

@@ -86,6 +86,7 @@
   <div id="drop">
     <p><b>digimon_ts_master.csv</b> をここにドラッグ＆ドロップ<br>または「CSVを開く」から選択</p>
     <p class="help">判定結果はブラウザの localStorage に自動保存されます。最後に「CSV書き出し」でマスターを更新してください。</p>
+    <p class="note" id="restored" hidden></p>
   </div>
   <div id="grid"></div>
 </main>
@@ -94,6 +95,7 @@
 const BOM = String.fromCharCode(0xFEFF);
 const LS_CSV = "digiAllure.judge.csv";
 const LS_STATUS = "digiAllure.judge.status";
+const LS_CSV_AT = "digiAllure.judge.csvAt";
 const IMG_BASE = "https://digimon.net/cimages/digimon/";
 const REF_BASE = "https://digimon.net/reference/detail.php?directory_name=";
 const GAME8_BASE = "https://game8.jp/digimonstory-ts/";
@@ -105,6 +107,7 @@ let rows = [];        // CSV 行（オブジェクト）
 let saved = {};       // key -> status（localStorage）
 let visible = [];     // 表示中の rows
 let cur = 0;          // 選択中の visible インデックス
+let restoredAt = null;
 const levelOn = new Set();
 
 const $ = (id) => document.getElementById(id);
@@ -140,22 +143,33 @@ function toCSV() {
 function loadCSV(text, persist) {
   const table = parseCSV(text);
   if (!table.length) return alert("CSVが空です");
-  fields = table[0];
+  const head = table[0];
   for (const need of ["game_no", "name_ja", "level", "directory_name", "status"]) {
-    if (!fields.includes(need)) return alert(`列 ${need} がありません`);
+    if (!head.includes(need)) return alert(`列 ${need} がありません`);
   }
-  rows = table.slice(1).map((cols) => Object.fromEntries(fields.map((k, i) => [k, cols[i] ?? ""])));
+  const parsed = table.slice(1).map((cols) => Object.fromEntries(head.map((k, i) => [k, cols[i] ?? ""])));
+  const bad = parsed.find((r) => !Object.hasOwn(STATUS_LABEL, r.status));
+  if (bad) return alert(`No.${bad.game_no} ${bad.name_ja} の status「${bad.status}」は不正です（candidate / approved / excluded のみ）`);
+  const n = Object.keys(saved).length;
+  if (persist && n && !confirm(`判定途中のデータ ${n} 件を破棄して新しいCSVを開きます。書き出していない判定は失われます。よろしいですか？`)) return;
+  fields = head;
+  rows = parsed;
   if (persist) {
     // 新しく開いたCSVを正とし、以前の判定途中データは破棄する
     saved = {};
+    restoredAt = null;
     localStorage.removeItem(LS_STATUS);
     localStorage.setItem(LS_CSV, text);
+    localStorage.setItem(LS_CSV_AT, new Date().toLocaleString());
   } else {
     // 前回のCSVを復元するときだけ localStorage の判定を上乗せする
     saved = JSON.parse(localStorage.getItem(LS_STATUS) || "{}");
     for (const r of rows) if (saved[keyOf(r)]) r.status = saved[keyOf(r)];
+    restoredAt = localStorage.getItem(LS_CSV_AT) || "日時不明";
   }
-  $("drop").hidden = true;
+  $("drop").hidden = !restoredAt;
+  $("restored").hidden = !restoredAt;
+  $("restored").textContent = `${restoredAt} に開いたCSVを復元しています。マスターがその後更新されていれば、最新のCSVを開き直してください。`;
   buildFilters();
   render();
 }
@@ -187,10 +201,10 @@ function cardHTML(r, i) {
   const st = r.status || "candidate";
   const dn = r.directory_name;
   const img = dn
-    ? `<img loading="lazy" referrerpolicy="no-referrer" alt="" src="${IMG_BASE}${encodeURIComponent(dn)}.jpg" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'noimg',textContent:'画像なし'}))">`
+    ? `<img loading="lazy" referrerpolicy="no-referrer" alt="" src="${IMG_BASE}${esc(dn)}.jpg" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'noimg',textContent:'画像なし'}))">`
     : '<span class="noimg">directory_name 未設定</span>';
-  return `<div class="card ${st}${i === cur ? " cur" : ""}" data-i="${i}">
-    <div class="thumb">${img}${st !== "candidate" ? `<span class="badge ${st}">${STATUS_LABEL[st]}</span>` : ""}</div>
+  return `<div class="card ${esc(st)}${i === cur ? " cur" : ""}" data-i="${i}">
+    <div class="thumb">${img}${st !== "candidate" ? `<span class="badge ${esc(st)}">${STATUS_LABEL[st]}</span>` : ""}</div>
     <div class="info">
       <div class="no">No.${esc(r.game_no || "—")}</div>
       <div class="name">${esc(r.name_ja)}</div>
@@ -238,7 +252,7 @@ function moveCur(to, scroll = true) {
 // ---------- 判定 ----------
 function setStatus(r, st) {
   r.status = st;
-  if (st === "candidate") delete saved[keyOf(r)]; else saved[keyOf(r)] = st;
+  saved[keyOf(r)] = st;
 }
 function persist() { localStorage.setItem(LS_STATUS, JSON.stringify(saved)); }
 function judge(i, st, toggle) {
@@ -300,6 +314,7 @@ $("btnBulk").addEventListener("click", () => {
 });
 $("btnExport").addEventListener("click", () => {
   if (!rows.length) return alert("先にCSVを読み込んでください");
+  if (restoredAt && !confirm(`${restoredAt} に開いたCSVを復元したデータです。マスターがその後更新されていると、その変更を上書きします。書き出しますか？`)) return;
   const blob = new Blob([toCSV()], { type: "text/csv" });
   const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "digimon_ts_master.csv" });
   a.click();
@@ -309,6 +324,7 @@ $("btnClear").addEventListener("click", () => {
   if (!confirm("localStorage の判定結果と読み込んだCSVを消去します。よろしいですか？")) return;
   localStorage.removeItem(LS_STATUS);
   localStorage.removeItem(LS_CSV);
+  localStorage.removeItem(LS_CSV_AT);
   location.reload();
 });
 
@@ -319,7 +335,7 @@ document.addEventListener("dragover", (e) => { e.preventDefault(); $("drop").cla
 document.addEventListener("dragleave", () => $("drop").classList.remove("over"));
 document.addEventListener("drop", (e) => { e.preventDefault(); $("drop").classList.remove("over"); readFile(e.dataTransfer.files[0]); });
 
-// 前回読み込んだCSVがあれば復元
+// 前回開いたCSVは古いマスターのことがあるので、開き直せるよう読み込み欄を残す
 const last = localStorage.getItem(LS_CSV);
 if (last) loadCSV(last, false);
 </script>

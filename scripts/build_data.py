@@ -51,12 +51,17 @@ def write_atomic(path, text):
 def load():
     with open(MASTER, encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
-    used, out = set(), []
+    for r in rows:
+        if not r["directory_name"]:
+            raise SystemExit(f"directory_name が空の行があります: {r['game_no']} {r['name_ja']}")
+    # 公式に個別ページがない形態は directory_name が重複するので、game_no が最小の行以外はサイト内IDを分ける
+    owner = {}
+    for r in sorted(rows, key=lambda r: (int(r["game_no"]) if r["game_no"] else float("inf"), r["game8_id"])):
+        owner.setdefault(r["directory_name"], r)
+    out = []
     for r in rows:
         official = r["directory_name"]
-        # 公式に個別ページがない形態は directory_name が重複するので、サイト内IDを分ける
-        sid = official if official not in used else f"{official}--{r['game_no'] or r['game8_id']}"
-        used.add(sid)
+        sid = official if owner[official] is r else f"{official}--{r['game_no'] or r['game8_id']}"
         image_url, image_source = r.get("image_url") or None, r.get("image_source") or "none"
         # 公式IDを借りている別形態（sid != official）は別の姿が出てしまうので対象外
         if not image_url and OFFICIAL_IMAGES and official and sid == official:
@@ -85,8 +90,11 @@ def main():
         for d in items if d["status"] == "approved"
     ]
     write_atomic(JSON_OUT, json.dumps(public, ensure_ascii=False, indent=1) + "\n")
-    # リクエスト画面用：未掲載のデジモン（名前と世代だけ）
-    candidates = [{"id": d["id"], "name": d["name"], "level": d["level"]} for d in items if d["status"] != "approved"]
+    # リクエスト画面用：未掲載のデジモン（ID・名前・世代だけ）。幼年期は掲載対象外
+    candidates = [
+        {"id": d["id"], "name": d["name"], "level": d["level"]}
+        for d in items if d["status"] != "approved" and not d["level"].startswith("幼年期")
+    ]
     write_atomic(CANDIDATES_OUT, json.dumps(candidates, ensure_ascii=False) + "\n")
 
     lines = [
@@ -109,6 +117,8 @@ def main():
         # 既存のレーティングは保持する
         for scope in ("all", GAME_ID):
             lines.append(f"INSERT OR IGNORE INTO ratings (digimon_id, game_scope) VALUES ({sql(d['id'])}, {sql(scope)});")
+    # CSV から消えた行は投票が参照しているので削除せず非公開に戻す
+    lines.append(f"UPDATE digimon SET status = 'candidate' WHERE id NOT IN ({', '.join(sql(d['id']) for d in items)});")
     for cat, labels in TAGS:
         for label in labels:
             lines.append(f"INSERT INTO tags (label, category) VALUES ({sql(label)}, {sql(cat)}) ON CONFLICT(label) DO UPDATE SET category=excluded.category;")

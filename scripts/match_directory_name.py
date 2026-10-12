@@ -65,8 +65,8 @@ MANUAL = {
 
 def norm(s):
     s = unicodedata.normalize("NFKC", s)
-    s = s.replace("・", "").replace("･", "").replace(" ", "").replace("　", "")
-    s = s.replace("ヴ", "ヴ").replace("−", "ー").replace("-", "ー")
+    s = s.replace("・", "").replace(" ", "")
+    s = s.replace("−", "ー").replace("-", "ー")
     return s
 
 
