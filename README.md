@@ -11,6 +11,50 @@
 | `scripts/fetch_official_index.py` | 公式図鑑一覧の「名前 ↔ directory_name」だけを取得（`work/` に出力、Git 管理外） |
 | `scripts/match_directory_name.py` | マスターの `directory_name` を名前照合で埋める。手動対応は `MANUAL` に追記 |
 
+## 公開サイト
+
+Cloudflare Pages（`site/`）＋ Pages Functions（`functions/api/`）＋ D1。
+
+| 画面 | 内容 |
+|---|---|
+| `#/` | 図鑑一覧（世代・公式タイプ・ファンタグで絞り込み、図鑑No.順／人気順） |
+| `#/d/{id}` | 詳細（事実情報・管理人コメント・ファンタグ付け・公式図鑑リンク） |
+| `#/vote` | 2択投票（Elo, K=32。片方は対戦数の少ない個体から選ぶ） |
+| `#/ranking` | 人気ランキング |
+| `#/types` | 公式タイプ／属性／ファンタグから探す |
+
+| API | 内容 |
+|---|---|
+| `GET /api/pair` | 対戦カード（署名トークン付き。配ったペア以外には投票できない） |
+| `POST /api/vote` | 投票。同じ人・同じペアは1日1回、1分30票まで |
+| `GET /api/ranking` | ランキング |
+| `GET /api/tags`, `GET/POST /api/tags/{id}` | タグ一覧・付ける／外す |
+
+公開判定は `status = 'approved'` のみ。公式画像は出さず、属性色のカード枠＋公式図鑑リンクで表示する（`image_url` と `image_source` を入れれば画像に差し替わり、AI生成は自動でラベル表示）。
+
+### ローカルで動かす
+
+```sh
+python3 -I -X utf8 scripts/build_data.py          # CSV → site/data/digimon.json, db/seed.sql
+printf 'VOTE_SECRET=%s\n' "$(openssl rand -hex 32)" > .dev.vars
+npx wrangler d1 execute digi-allure --local --file db/schema.sql
+npx wrangler d1 execute digi-allure --local --file db/seed.sql
+npx wrangler pages dev --port 8788                 # http://127.0.0.1:8788
+```
+
+### 本番デプロイ（未実施）
+
+```sh
+npx wrangler d1 create digi-allure                 # 出力された database_id を wrangler.toml に書く
+npx wrangler d1 execute digi-allure --remote --file db/schema.sql
+npx wrangler d1 execute digi-allure --remote --file db/seed.sql
+npx wrangler pages project create digi-allure
+npx wrangler pages secret put VOTE_SECRET --project-name digi-allure
+npx wrangler pages deploy
+```
+
+判定を変えたら `build_data.py` → `seed.sql` を再投入（レーティングは保持される）→ 再デプロイ。
+
 ## 判定の流れ
 
 1. `tools/judge.html` をブラウザで開き、`data/digimon_ts_master.csv` をドロップ
