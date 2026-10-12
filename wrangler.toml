@@ -6,4 +6,4 @@ pages_build_output_dir = "site"
 binding = "DB"
 database_name = "digi-allure"
 # 本番は `npx wrangler d1 create digi-allure` で作成し、出力された ID に置き換える
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "1d0ecc0e-3385-4707-b14a-5955ec85788d"
