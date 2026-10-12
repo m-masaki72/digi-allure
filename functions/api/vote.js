@@ -1,6 +1,8 @@
-import { json, fail, scopeOf, verifyPair, voterHash, eloDelta, readJSON, monthKey, monthScope, DEFAULT_SCOPE } from "../../lib/api.js";
+import { json, fail, scopeOf, verifyPair, clientIds, eloDelta, readJSON, monthKey, monthScope, DEFAULT_SCOPE } from "../../lib/api.js";
 
+// IPあたりの上限。学校・会社など1つのIPを大勢で使う場合も考えて1日の上限はゆるめ
 const MAX_VOTES_PER_MINUTE = 30;
+const MAX_VOTES_PER_DAY = 300;
 
 // 月間人気投票：同じ1票を今月のスコープにも反映する（行はその月の初対戦で作る）
 async function monthlyUpdates(env, winner, loser, now) {
@@ -28,21 +30,23 @@ export async function onRequestPost({ request, env }) {
     return fail(403, "対戦カードの有効期限が切れました。もう一度お試しください");
   }
   const loser = winner === a ? b : a;
-  const voter = await voterHash(request, env);
+  const { voter, ip } = await clientIds(request, env);
   const now = new Date();
   const dayStart = now.toISOString().slice(0, 10);
   const minuteAgo = new Date(now.getTime() - 60_000).toISOString();
 
-  const recent = await env.DB.prepare(
-    "SELECT COUNT(*) AS n FROM match_votes WHERE voter_hash = ? AND created_at >= ?"
-  ).bind(voter, minuteAgo).first();
-  if (recent.n >= MAX_VOTES_PER_MINUTE) return fail(429, "投票が速すぎます。少し待ってからどうぞ");
-
-  const dup = await env.DB.prepare(
-    `SELECT 1 FROM match_votes WHERE voter_hash = ? AND game_scope = ? AND created_at >= ?
-       AND ((winner_id = ? AND loser_id = ?) OR (winner_id = ? AND loser_id = ?)) LIMIT 1`
-  ).bind(voter, scope, dayStart, a, b, b, a).first();
-  if (dup) return fail(409, "この組み合わせには今日すでに投票済みです");
+  // 不正対策はIP単位で数える（同じIPを共有する人同士でも、同じ組み合わせは1日1票）
+  const [recent, today, dup] = await env.DB.batch([
+    env.DB.prepare("SELECT COUNT(*) AS n FROM match_votes WHERE ip_hash = ? AND created_at >= ?").bind(ip, minuteAgo),
+    env.DB.prepare("SELECT COUNT(*) AS n FROM match_votes WHERE ip_hash = ? AND created_at >= ?").bind(ip, dayStart),
+    env.DB.prepare(
+      `SELECT COUNT(*) AS n FROM match_votes WHERE ip_hash = ? AND game_scope = ? AND created_at >= ?
+         AND ((winner_id = ? AND loser_id = ?) OR (winner_id = ? AND loser_id = ?))`
+    ).bind(ip, scope, dayStart, a, b, b, a),
+  ]);
+  if (recent.results[0].n >= MAX_VOTES_PER_MINUTE) return fail(429, "投票が速すぎます。少し待ってからどうぞ");
+  if (today.results[0].n >= MAX_VOTES_PER_DAY) return fail(429, "今日の投票数の上限に達しました。また明日どうぞ");
+  if (dup.results[0].n) return fail(409, "この組み合わせには今日すでに投票済みです");
 
   const { results } = await env.DB.prepare(
     `SELECT r.digimon_id, r.elo FROM ratings r JOIN digimon d ON d.id = r.digimon_id
@@ -58,8 +62,8 @@ export async function onRequestPost({ request, env }) {
 
   await env.DB.batch([
     env.DB.prepare(
-      "INSERT INTO match_votes (winner_id, loser_id, game_scope, voter_hash, created_at) VALUES (?, ?, ?, ?, ?)"
-    ).bind(winner, loser, scope, voter, now.toISOString()),
+      "INSERT INTO match_votes (winner_id, loser_id, game_scope, voter_hash, ip_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(winner, loser, scope, voter, ip, now.toISOString()),
     update.bind(delta, winner, scope),
     update.bind(-delta, loser, scope),
     ...(scope === DEFAULT_SCOPE ? await monthlyUpdates(env, winner, loser, now) : []),

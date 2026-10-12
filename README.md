@@ -27,10 +27,12 @@ Cloudflare Pages（`site/`）＋ Pages Functions（`functions/api/`）＋ D1。
 | API | 内容 |
 |---|---|
 | `GET /api/pair` | 対戦カード（署名トークン付き。配ったペア以外には投票できない） |
-| `POST /api/vote` | 投票。同じ人・同じペアは1日1回、1分30票まで |
+| `POST /api/vote` | 投票。同じ回線（IP）・同じペアは1日1回、IPあたり1分30票・1日300票まで |
 | `GET /api/ranking?month=current\|YYYY-MM` / `?scope=` | 月間／通算ランキング（1票が通算と今月の両方に入る） |
-| `GET/POST /api/requests` | リクエスト集計・送信。同じ人・同じデジモンは1日1回、1時間10件まで |
-| `GET /api/tags`, `GET/POST /api/tags/{id}` | タグ一覧・付ける／外す |
+| `GET/POST /api/requests` | リクエスト集計・送信。同じ回線（IP）・同じデジモンは1日1回、IPあたり1時間10件まで |
+| `GET /api/tags`, `GET/POST /api/tags/{id}` | タグ一覧・付ける／外す。同じ回線（IP）・同じタグは1日1回、IPあたり1分60件・1日300件まで |
+
+投票者の識別は日替わりソルトのハッシュのみ（生IPは保存しない）。`voter_hash`（IP+UA）は「自分が付けたタグ」の判定、`ip_hash`（IPのみ）は不正対策の集計に使う。IPを大量に用意する相手は防げない（許容）。
 
 公開判定は `status = 'approved'` のみ。画像は公式図鑑の画像を直リンク表示（保存しない・出典ラベル付き）。`scripts/build_data.py` の `OFFICIAL_IMAGES = False` で属性色のカード枠に戻せる。CSVに `image_url` と `image_source` を入れた個体はそちらを優先（AI生成は自動でラベル表示）。
 

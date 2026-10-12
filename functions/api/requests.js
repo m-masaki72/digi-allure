@@ -1,4 +1,4 @@
-import { json, fail, voterHash, readJSON } from "../../lib/api.js";
+import { json, fail, clientIds, readJSON } from "../../lib/api.js";
 
 const MAX_REQUESTS_PER_HOUR = 10;
 const MAX_COMMENT = 200;
@@ -27,20 +27,20 @@ export async function onRequestPost({ request, env }) {
   if (!target) return fail(404, "そのデジモンは掲載範囲外です");
   if (target.status === "approved") return fail(409, "そのデジモンはすでに掲載済みです");
 
-  const voter = await voterHash(request, env);
+  // 不正対策はIP単位で数える
+  const { voter, ip } = await clientIds(request, env);
   const now = new Date();
-  const hourAgo = new Date(now.getTime() - 3_600_000).toISOString();
-  const recent = await env.DB.prepare(
-    "SELECT COUNT(*) AS n FROM requests WHERE voter_hash = ? AND created_at >= ?"
-  ).bind(voter, hourAgo).first();
-  if (recent.n >= MAX_REQUESTS_PER_HOUR) return fail(429, "リクエストが多すぎます。時間をおいてどうぞ");
-  const dup = await env.DB.prepare(
-    "SELECT 1 FROM requests WHERE voter_hash = ? AND digimon_id = ? AND created_at >= ? LIMIT 1"
-  ).bind(voter, id, now.toISOString().slice(0, 10)).first();
-  if (dup) return fail(409, "このデジモンには今日すでにリクエスト済みです");
+  const [recent, dup] = await env.DB.batch([
+    env.DB.prepare("SELECT COUNT(*) AS n FROM requests WHERE ip_hash = ? AND created_at >= ?")
+      .bind(ip, new Date(now.getTime() - 3_600_000).toISOString()),
+    env.DB.prepare("SELECT COUNT(*) AS n FROM requests WHERE ip_hash = ? AND digimon_id = ? AND created_at >= ?")
+      .bind(ip, id, now.toISOString().slice(0, 10)),
+  ]);
+  if (recent.results[0].n >= MAX_REQUESTS_PER_HOUR) return fail(429, "リクエストが多すぎます。時間をおいてどうぞ");
+  if (dup.results[0].n) return fail(409, "このデジモンには今日すでにリクエスト済みです");
 
   await env.DB.prepare(
-    "INSERT INTO requests (digimon_id, comment, voter_hash, created_at) VALUES (?, ?, ?, ?)"
-  ).bind(id, comment || null, voter, now.toISOString()).run();
+    "INSERT INTO requests (digimon_id, comment, voter_hash, ip_hash, created_at) VALUES (?, ?, ?, ?, ?)"
+  ).bind(id, comment || null, voter, ip, now.toISOString()).run();
   return json({ ok: true });
 }
