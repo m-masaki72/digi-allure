@@ -8,10 +8,12 @@ const state = {
   byId: new Map(),
   tags: null,      // { tags: [...], counts: [...] } API が使えないときは null
   ranking: null,   // Map(id -> { rank, elo, matches, wins }) 通算
+  monthly: null,   // 今月の人気投票（バナー用）
   candidates: null, // 未掲載デジモン（リクエスト用）
   filters: { q: "", levels: new Set(), type: "", tag: "", sort: "no" },
 };
 const app = document.getElementById("app");
+let navSeq = 0;
 
 // ---------- ユーティリティ ----------
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -21,8 +23,12 @@ async function api(path, options) {
     ...options,
     headers: options?.body ? { "content-type": "application/json" } : undefined,
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `通信に失敗しました (${res.status})`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data) {
+    const err = new Error(data?.error || `通信に失敗しました (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
@@ -67,6 +73,10 @@ async function loadRanking(force = false) {
   state.ranking = new Map(data.ranking.map((r, i) => [r.id, { ...r, rank: i + 1 }]));
   return state.ranking;
 }
+async function loadMonthly() {
+  if (!state.monthly) state.monthly = await api("/api/ranking?month=current");
+  return state.monthly;
+}
 async function loadTags(force = false) {
   if (state.tags && !force) return state.tags;
   state.tags = await api("/api/tags");
@@ -108,34 +118,51 @@ function renderGrid() {
   document.getElementById("grid").innerHTML = list.length ? list.map(cardHTML).join("") : '<p class="empty">該当するデジモンがいません</p>';
 }
 
-async function viewList() {
-  const [, , monthly] = await Promise.allSettled([loadTags(), loadRanking(), api("/api/ranking?month=current")]);
-  const m = monthly.value;
+function renderBanner() {
+  const m = state.monthly;
   const top = m?.ranking.find((r) => state.byId.has(r.id));
-  const banner = m ? `<a class="banner" href="#/ranking">${esc(monthLabel(m.current))}の人気投票 開催中
+  document.getElementById("banner").innerHTML = m ? `<a class="banner" href="#/ranking">${esc(monthLabel(m.current))}の人気投票 開催中
     <span>${top ? `現在の1位：<b>${esc(state.byId.get(top.id).name)}</b>` : "まだ投票がありません"} ／ 結果を見る →</span></a>` : "";
+}
+
+function renderSortOptions() {
+  const f = state.filters;
+  document.getElementById("sort").innerHTML = `<option value="no"${f.sort === "no" ? " selected" : ""}>図鑑No.順</option>
+    ${state.ranking ? `<option value="popular"${f.sort === "popular" ? " selected" : ""}>人気順</option>` : ""}`;
+}
+
+function renderTagChips(settled) {
+  const f = state.filters;
+  const usedTags = state.tags ? state.tags.tags.filter((t) => state.tags.counts.some((c) => c.tag_id === t.id)) : [];
+  if (f.tag && (state.tags || settled) && !usedTags.some((t) => String(t.id) === f.tag)) f.tag = "";
+  const row = document.getElementById("tagchips");
+  row.hidden = !usedTags.length;
+  row.innerHTML = usedTags.length ? `<label>ファンタグ</label>${usedTags.map((t) => `<button class="chip${String(t.id) === f.tag ? " on" : ""}" data-tag="${t.id}">${esc(t.label)}</button>`).join("")}` : "";
+}
+
+function viewList() {
+  const seq = navSeq;
   const f = state.filters;
   const levels = LEVEL_ORDER.filter((l) => state.list.some((d) => d.level === l));
   const types = [...new Set(state.list.map((d) => d.type))].sort((a, b) => a.localeCompare(b, "ja"));
-  const usedTags = state.tags ? state.tags.tags.filter((t) => state.tags.counts.some((c) => c.tag_id === t.id)) : [];
   app.innerHTML = `
     <h1>お色気デジモン図鑑</h1>
     <p class="lead">管理人が「お色気枠」と認定したデジモンだけを集めた非公式図鑑です。気になる子を見つけたら、詳細ページでタグを付けたり2択投票で推してください。</p>
-    ${banner}
+    <div id="banner"></div>
     <div class="filters">
       <div class="row">
         <input type="search" id="q" placeholder="名前・タイプで検索" value="${esc(f.q)}">
         <select id="type"><option value="">公式タイプ: すべて</option>${types.map((t) => `<option${t === f.type ? " selected" : ""}>${esc(t)}</option>`).join("")}</select>
-        <select id="sort">
-          <option value="no"${f.sort === "no" ? " selected" : ""}>図鑑No.順</option>
-          ${state.ranking ? `<option value="popular"${f.sort === "popular" ? " selected" : ""}>人気順</option>` : ""}
-        </select>
-        <span class="count" id="count"></span>
+        <select id="sort"></select>
+        <span class="count" id="count" role="status"></span>
       </div>
       <div class="row" id="levels"><label>世代</label>${levels.map((l) => `<button class="chip${f.levels.has(l) ? " on" : ""}" data-level="${esc(l)}">${esc(l)}</button>`).join("")}</div>
-      ${usedTags.length ? `<div class="row" id="tagchips"><label>ファンタグ</label>${usedTags.map((t) => `<button class="chip${String(t.id) === f.tag ? " on" : ""}" data-tag="${t.id}">${esc(t.label)}</button>`).join("")}</div>` : ""}
+      <div class="row" id="tagchips" hidden></div>
     </div>
     <div class="grid" id="grid"></div>`;
+  renderBanner();
+  renderSortOptions();
+  renderTagChips(false);
   renderGrid();
   document.getElementById("q").addEventListener("input", (e) => { f.q = e.target.value.trim(); renderGrid(); });
   document.getElementById("type").addEventListener("change", (e) => { f.type = e.target.value; renderGrid(); });
@@ -147,13 +174,17 @@ async function viewList() {
     b.classList.toggle("on");
     renderGrid();
   });
-  document.getElementById("tagchips")?.addEventListener("click", (e) => {
+  document.getElementById("tagchips").addEventListener("click", (e) => {
     const b = e.target.closest("[data-tag]");
     if (!b) return;
     f.tag = f.tag === b.dataset.tag ? "" : b.dataset.tag;
     e.currentTarget.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.tag === f.tag));
     renderGrid();
   });
+  const whenCurrent = (fn) => () => { if (seq === navSeq) fn(); };
+  loadTags().catch(() => null).then(whenCurrent(() => { renderTagChips(true); renderGrid(); }));
+  loadRanking().catch(() => null).then(whenCurrent(() => { renderSortOptions(); renderGrid(); }));
+  loadMonthly().catch(() => null).then(whenCurrent(renderBanner));
 }
 
 // ---------- 詳細 ----------
@@ -165,25 +196,27 @@ function tagButtons(id, tags) {
     .join("")}</div>`).join("");
 }
 
+const rankHTML = (rank) => rank ? `<dt>人気</dt><dd>${rank.rank}位（レート ${Math.round(rank.elo)}・${rank.matches}戦）</dd>` : "";
+
 async function viewDetail(id) {
+  const seq = navSeq;
   const d = state.byId.get(id);
   if (!d) {
     app.innerHTML = '<p class="empty">このデジモンは見つかりませんでした。<a href="#/">図鑑へ戻る</a></p>';
     return;
   }
   document.title = `${d.name} — デジアリュール`;
-  const rank = await loadRanking().then((r) => r.get(id)).catch(() => null);
   app.innerHTML = `
     <div class="detail">
       <div>${art(d)}</div>
       <div>
         <div class="no">タイムストレンジャー図鑑 No.${esc(d.no ?? "—")}</div>
         <h1>${esc(d.name)}</h1>
-        <dl class="facts">
+        <dl class="facts" id="facts">
           <dt>世代</dt><dd>${esc(d.level)}</dd>
           <dt>属性</dt><dd>${esc(d.attribute)}</dd>
           <dt>公式タイプ</dt><dd>${esc(d.type)}</dd>
-          ${rank ? `<dt>人気</dt><dd>${rank.rank}位（レート ${Math.round(rank.elo)}・${rank.matches}戦）</dd>` : ""}
+          ${rankHTML(state.ranking?.get(id))}
         </dl>
         ${d.blurb
           ? `<div class="blurb">${esc(d.blurb)}</div>`
@@ -198,12 +231,18 @@ async function viewDetail(id) {
         </div>
       </div>
     </div>`;
+  if (!state.ranking) {
+    loadRanking().then((r) => {
+      if (seq === navSeq) document.getElementById("facts").insertAdjacentHTML("beforeend", rankHTML(r.get(id)));
+    }).catch(() => null);
+  }
   const box = document.getElementById("tags");
   try {
     const data = await api(`/api/tags/${encodeURIComponent(id)}`);
+    if (seq !== navSeq) return;
     box.innerHTML = tagButtons(id, data.tags);
   } catch (e) {
-    box.innerHTML = `<p class="error">${esc(e.message)}</p>`;
+    if (seq === navSeq) box.innerHTML = `<p class="error">${esc(e.message)}</p>`;
     return;
   }
   box.addEventListener("click", async (e) => {
@@ -226,6 +265,7 @@ let voteKeyHandler = null;
 let votedCount = 0;
 
 async function viewVote() {
+  const seq = navSeq;
   app.innerHTML = `
     <h1>どっちがお好み？</h1>
     <p class="lead">より魅力的だと思う方を選んでください。結果はレーティング（Elo）でランキングに反映されます。キーボードは ← / → で選択、↓ でスキップ。</p>
@@ -242,34 +282,46 @@ async function viewVote() {
 
   async function next() {
     busy = true;
+    pair = null;
     try {
-      pair = await api(`/api/pair?scope=${SCOPE}`);
-      const a = state.byId.get(pair.a), b = state.byId.get(pair.b);
-      if (!a || !b) throw new Error("データが古いようです。ページを再読み込みしてください");
-      document.getElementById("pair").innerHTML = `<div class="vote">${choiceHTML(a, "a")}<div class="vs">VS</div>${choiceHTML(b, "b")}</div>`;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const p = await api(`/api/pair?scope=${SCOPE}`);
+        if (seq !== navSeq) return;
+        const a = state.byId.get(p.a), b = state.byId.get(p.b);
+        if (!a || !b) continue;
+        pair = p;
+        document.getElementById("pair").innerHTML = `<div class="vote">${choiceHTML(a, "a")}<div class="vs">VS</div>${choiceHTML(b, "b")}</div>`;
+        return;
+      }
+      throw new Error("いま表示できる対戦カードがありません。しばらくしてからお試しください");
     } catch (e) {
-      document.getElementById("pair").innerHTML = `<p class="error">${esc(e.message)}</p>`;
+      if (seq === navSeq) document.getElementById("pair").innerHTML = `<p class="error">${esc(e.message)}</p>`;
     } finally {
       busy = false;
     }
   }
 
   async function choose(side) {
-    if (busy || !pair) return;
+    if (busy || !pair || seq !== navSeq) return;
     busy = true;
     const winner = pair[side];
     const btns = document.querySelectorAll(".choice");
     btns.forEach((b) => { b.disabled = true; b.classList.toggle("win", b.dataset.side === side); });
     try {
       const res = await api("/api/vote", { method: "POST", body: JSON.stringify({ ...pair, winner }) });
+      if (seq !== navSeq) return;
       votedCount++;
       document.getElementById("voted").textContent = `この訪問で ${votedCount} 票投じました`;
       toast(`${state.byId.get(winner).name} に投票しました（+${res.delta.toFixed(1)}）`);
       state.ranking = null;
+      state.monthly = null;
     } catch (e) {
-      toast(e.message, true);
+      if (seq !== navSeq) return;
+      if (e.status === 409) toast("この組み合わせは今日すでに投票済みです。次の対戦へ進みます");
+      else toast(e.message, true);
     }
     await new Promise((r) => setTimeout(r, 350));
+    if (seq !== navSeq) return;
     busy = false;
     next();
   }
@@ -280,6 +332,8 @@ async function viewVote() {
   });
   document.getElementById("skip").addEventListener("click", () => !busy && next());
   voteKeyHandler = (e) => {
+    if (e.altKey || e.metaKey || e.ctrlKey || e.shiftKey || e.repeat) return;
+    if (e.target.closest?.("input, select, textarea, [contenteditable]")) return;
     if (e.key === "ArrowLeft") choose("a");
     else if (e.key === "ArrowRight") choose("b");
     else if (e.key === "ArrowDown") { e.preventDefault(); if (!busy) next(); }
@@ -293,6 +347,7 @@ const monthLabel = (m) => `${Number(m.slice(0, 4))}年${Number(m.slice(5))}月`;
 
 // arg: 省略=今月の人気投票 / "all"=通算 / "YYYY-MM"=過去の月
 async function viewRanking(arg) {
+  const seq = navSeq;
   const isAll = arg === "all";
   const month = isAll ? null : /^\d{4}-\d{2}$/.test(arg ?? "") ? arg : null;
   app.innerHTML = '<h1>人気ランキング</h1><p class="loading">集計中…</p>';
@@ -300,10 +355,12 @@ async function viewRanking(arg) {
   try {
     data = await api(isAll ? `/api/ranking?scope=${SCOPE}` : `/api/ranking?month=${month ?? "current"}`);
   } catch (e) {
-    app.innerHTML = `<h1>人気ランキング</h1><p class="error">${esc(e.message)}</p>`;
+    if (seq === navSeq) app.innerHTML = `<h1>人気ランキング</h1><p class="error">${esc(e.message)}</p>`;
     return;
   }
   if (isAll) state.ranking = new Map(data.ranking.map((r, i) => [r.id, { ...r, rank: i + 1 }]));
+  else if (!month) state.monthly = data;
+  if (seq !== navSeq) return;
   const rows = data.ranking.map((r, i) => ({ ...r, rank: i + 1 })).filter((r) => state.byId.has(r.id));
   const total = rows.reduce((s, r) => s + r.matches, 0) / 2;
   const shown = isAll ? "all" : data.month;
@@ -338,7 +395,9 @@ async function viewRanking(arg) {
 
 // ---------- タイプから探す ----------
 async function viewTypes() {
+  const seq = navSeq;
   await loadTags().catch(() => null);
+  if (seq !== navSeq) return;
   const group = (keyOf) => {
     const m = new Map();
     for (const d of state.list) for (const k of [].concat(keyOf(d))) {
@@ -374,8 +433,10 @@ async function viewTypes() {
 
 // ---------- 掲載リクエスト ----------
 async function viewRequest() {
+  const seq = navSeq;
   if (!state.candidates) {
     state.candidates = await fetch("/data/candidates.json").then((r) => r.json());
+    if (seq !== navSeq) return;
   }
   const byName = new Map(state.candidates.map((c) => [c.name, c]));
   app.innerHTML = `
@@ -396,6 +457,7 @@ async function viewRequest() {
     const box = document.getElementById("reqtop");
     try {
       const { requests } = await api("/api/requests");
+      if (seq !== navSeq) return;
       box.innerHTML = requests.length
         ? `<table class="rank"><thead><tr><th>順位</th><th>デジモン</th><th>世代</th><th class="num">リクエスト</th></tr></thead><tbody>${requests
             .map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.level)}</td><td class="num">${r.n}</td></tr>`)
@@ -432,6 +494,7 @@ async function viewRequest() {
 
 // ---------- ルーティング ----------
 async function route() {
+  const seq = ++navSeq;
   if (voteKeyHandler) {
     document.removeEventListener("keydown", voteKeyHandler);
     voteKeyHandler = null;
@@ -450,7 +513,7 @@ async function route() {
     else if (page === "request") await viewRequest();
     else await viewList();
   } catch (e) {
-    app.innerHTML = `<p class="error">${esc(e.message)}</p>`;
+    if (seq === navSeq) app.innerHTML = `<p class="error">${esc(e.message)}</p>`;
   }
 }
 
