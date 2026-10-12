@@ -9,8 +9,8 @@
   "attribute": "ワクチン",
   "type": "獣型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/terriermon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "piyomon",
@@ -22,8 +22,8 @@
   "attribute": "ワクチン",
   "type": "ヒナ鳥型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/piyomon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "plotmon",
@@ -35,8 +35,8 @@
   "attribute": "ワクチン",
   "type": "哺乳類型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/plotmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "penmon",
@@ -48,8 +48,8 @@
   "attribute": "ワクチン",
   "type": "鳥型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/penmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "lucemon",
@@ -61,8 +61,8 @@
   "attribute": "ワクチン",
   "type": "天使型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/lucemon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "patamon",
@@ -74,8 +74,8 @@
   "attribute": "データ",
   "type": "哺乳類型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/patamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "palmon",
@@ -87,8 +87,8 @@
   "attribute": "データ",
   "type": "植物型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/palmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "floramon",
@@ -100,8 +100,8 @@
   "attribute": "データ",
   "type": "植物型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/floramon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "lunamon",
@@ -113,8 +113,8 @@
   "attribute": "データ",
   "type": "哺乳類型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/lunamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "renamon",
@@ -126,8 +126,8 @@
   "attribute": "データ",
   "type": "獣人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/renamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "lopmon",
@@ -139,8 +139,8 @@
   "attribute": "データ",
   "type": "獣型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/lopmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "aegiomon",
@@ -152,8 +152,8 @@
   "attribute": "ワクチン",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/aegiomon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "galgomon",
@@ -165,8 +165,8 @@
   "attribute": "ワクチン",
   "type": "獣人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/galgomon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "tailmon",
@@ -178,8 +178,8 @@
   "attribute": "ワクチン",
   "type": "聖獣型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/tailmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "witchmon",
@@ -191,8 +191,8 @@
   "attribute": "データ",
   "type": "魔人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/witchmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "kyubimon",
@@ -204,8 +204,8 @@
   "attribute": "データ",
   "type": "妖獣型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/kyubimon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "sunflowmon",
@@ -217,8 +217,8 @@
   "attribute": "データ",
   "type": "植物型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/sunflowmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "lekismon",
@@ -230,8 +230,8 @@
   "attribute": "データ",
   "type": "獣人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/lekismon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "blacktailmon",
@@ -243,8 +243,8 @@
   "attribute": "ウィルス",
   "type": "魔獣型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/blacktailmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "nefertimon",
@@ -256,8 +256,8 @@
   "attribute": "フリー",
   "type": "聖獣型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/nefertimon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "ranamon",
@@ -269,8 +269,8 @@
   "attribute": "ヴァリアブル",
   "type": "妖精型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/ranamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "calamaramon",
@@ -282,8 +282,8 @@
   "attribute": "ヴァリアブル",
   "type": "水棲型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/calamaramon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "ex-tyranomon",
@@ -295,8 +295,8 @@
   "attribute": "ワクチン",
   "type": "パペット型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/ex-tyranomon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "angewomon",
@@ -308,8 +308,8 @@
   "attribute": "ワクチン",
   "type": "大天使型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/angewomon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "garudamon",
@@ -321,8 +321,8 @@
   "attribute": "ワクチン",
   "type": "鳥人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/garudamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "jewelbeemon",
@@ -334,8 +334,8 @@
   "attribute": "ワクチン",
   "type": "昆虫型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/jewelbeemon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "monzaemon",
@@ -347,8 +347,8 @@
   "attribute": "ワクチン",
   "type": "パペット型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/monzaemon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "andiramon_2",
@@ -360,8 +360,8 @@
   "attribute": "データ",
   "type": "聖獣型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/andiramon_2.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "crescemon",
@@ -373,8 +373,8 @@
   "attribute": "データ",
   "type": "魔人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/crescemon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "sirenmon",
@@ -386,8 +386,8 @@
   "attribute": "データ",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/sirenmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "taomon",
@@ -399,8 +399,8 @@
   "attribute": "データ",
   "type": "魔人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/taomon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "pandamon",
@@ -412,8 +412,8 @@
   "attribute": "データ",
   "type": "パペット型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/pandamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "lilamon",
@@ -425,8 +425,8 @@
   "attribute": "データ",
   "type": "妖精型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/lilamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "lilimon",
@@ -438,8 +438,8 @@
   "attribute": "データ",
   "type": "妖精型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/lilimon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "archnemon",
@@ -451,8 +451,8 @@
   "attribute": "ウィルス",
   "type": "魔獣型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/archnemon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "rucemonfalldownmode",
@@ -464,8 +464,8 @@
   "attribute": "ウィルス",
   "type": "魔王型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/rucemonfalldownmode.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "ladydevimon",
@@ -477,8 +477,8 @@
   "attribute": "ウィルス",
   "type": "堕天使型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/ladydevimon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "silphymon",
@@ -490,8 +490,8 @@
   "attribute": "フリー",
   "type": "獣人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/silphymon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "venusmon",
@@ -503,8 +503,8 @@
   "attribute": "ワクチン",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/venusmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "ofanimon",
@@ -516,8 +516,8 @@
   "attribute": "ワクチン",
   "type": "座天使型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/ofanimon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "holydramon",
@@ -529,8 +529,8 @@
   "attribute": "ワクチン",
   "type": "聖竜型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/holydramon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "mastemon",
@@ -542,8 +542,8 @@
   "attribute": "ワクチン",
   "type": "天使型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/mastemon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "marinangemon",
@@ -555,8 +555,8 @@
   "attribute": "ワクチン",
   "type": "妖精型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/marinangemon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "kuzuhamon",
@@ -568,8 +568,8 @@
   "attribute": "データ",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/kuzuhamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "ceresmon",
@@ -581,8 +581,8 @@
   "attribute": "データ",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/ceresmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "ceresmon--349",
@@ -607,8 +607,8 @@
   "attribute": "データ",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/sakuyamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "dianamon",
@@ -620,8 +620,8 @@
   "attribute": "データ",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/dianamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "rosemon",
@@ -633,8 +633,8 @@
   "attribute": "データ",
   "type": "妖精型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/rosemon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "lotusmon",
@@ -646,8 +646,8 @@
   "attribute": "データ",
   "type": "妖精型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/lotusmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "beelstarmon",
@@ -659,8 +659,8 @@
   "attribute": "ウィルス",
   "type": "魔人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/beelstarmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "minervamon",
@@ -672,8 +672,8 @@
   "attribute": "ウィルス",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/minervamon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "junomon",
@@ -685,8 +685,8 @@
   "attribute": "ウィルス",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/junomon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "junomon_hysteric",
@@ -698,8 +698,8 @@
   "attribute": "ウィルス",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/junomon_hysteric.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "lilithmon",
@@ -711,8 +711,8 @@
   "attribute": "ウィルス",
   "type": "魔王型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/lilithmon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "valkyrimon",
@@ -724,8 +724,8 @@
   "attribute": "フリー",
   "type": "戦士型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/valkyrimon.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "rosemonburstmode",
@@ -737,8 +737,8 @@
   "attribute": "データ",
   "type": "妖精型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/rosemonburstmode.jpg",
+  "image_source": "official_link"
  },
  {
   "id": "mervamon",
@@ -750,7 +750,7 @@
   "attribute": "ウィルス",
   "type": "神人型",
   "blurb": null,
-  "image_url": null,
-  "image_source": "none"
+  "image_url": "https://digimon.net/cimages/digimon/mervamon.jpg",
+  "image_source": "official_link"
  }
 ]

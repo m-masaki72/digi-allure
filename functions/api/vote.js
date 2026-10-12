@@ -1,6 +1,21 @@
-import { json, fail, scopeOf, verifyPair, voterHash, eloDelta, readJSON } from "../../lib/api.js";
+import { json, fail, scopeOf, verifyPair, voterHash, eloDelta, readJSON, monthKey, monthScope, DEFAULT_SCOPE } from "../../lib/api.js";
 
 const MAX_VOTES_PER_MINUTE = 30;
+
+// 月間人気投票：同じ1票を今月のスコープにも反映する（行はその月の初対戦で作る）
+async function monthlyUpdates(env, winner, loser, now) {
+  const month = monthScope(monthKey(now));
+  const { results } = await env.DB.prepare(
+    "SELECT digimon_id, elo FROM ratings WHERE game_scope = ? AND digimon_id IN (?, ?)"
+  ).bind(month, winner, loser).all();
+  const elo = { [winner]: 1500, [loser]: 1500, ...Object.fromEntries(results.map((r) => [r.digimon_id, r.elo])) };
+  const delta = eloDelta(elo[winner], elo[loser]);
+  const upsert = env.DB.prepare(
+    `INSERT INTO ratings (digimon_id, game_scope, elo, matches) VALUES (?, ?, 1500 + ?, 1)
+     ON CONFLICT(digimon_id, game_scope) DO UPDATE SET elo = elo + excluded.elo - 1500, matches = matches + 1`
+  );
+  return [upsert.bind(winner, month, delta), upsert.bind(loser, month, -delta)];
+}
 
 // POST /api/vote  { scope, a, b, exp, token, winner }
 export async function onRequestPost({ request, env }) {
@@ -40,12 +55,14 @@ export async function onRequestPost({ request, env }) {
   const update = env.DB.prepare(
     "UPDATE ratings SET elo = elo + ?, matches = matches + 1 WHERE digimon_id = ? AND game_scope = ?"
   );
+
   await env.DB.batch([
     env.DB.prepare(
       "INSERT INTO match_votes (winner_id, loser_id, game_scope, voter_hash, created_at) VALUES (?, ?, ?, ?, ?)"
     ).bind(winner, loser, scope, voter, now.toISOString()),
     update.bind(delta, winner, scope),
     update.bind(-delta, loser, scope),
+    ...(scope === DEFAULT_SCOPE ? await monthlyUpdates(env, winner, loser, now) : []),
   ]);
   return json({
     winner: { id: winner, elo: elo[winner] + delta },

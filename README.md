@@ -20,17 +20,21 @@ Cloudflare Pages（`site/`）＋ Pages Functions（`functions/api/`）＋ D1。
 | `#/` | 図鑑一覧（世代・公式タイプ・ファンタグで絞り込み、図鑑No.順／人気順） |
 | `#/d/{id}` | 詳細（事実情報・管理人コメント・ファンタグ付け・公式図鑑リンク） |
 | `#/vote` | 2択投票（Elo, K=32。片方は対戦数の少ない個体から選ぶ） |
-| `#/ranking` | 人気ランキング |
+| `#/ranking` | 月間人気投票（日本時間の暦月ごとにリセット）。`#/ranking/all` で通算、`#/ranking/YYYY-MM` で過去月の確定結果 |
+| `#/request` | 未掲載デジモンの掲載リクエスト（推しコメントは管理人のみ閲覧） |
 | `#/types` | 公式タイプ／属性／ファンタグから探す |
 
 | API | 内容 |
 |---|---|
 | `GET /api/pair` | 対戦カード（署名トークン付き。配ったペア以外には投票できない） |
 | `POST /api/vote` | 投票。同じ人・同じペアは1日1回、1分30票まで |
-| `GET /api/ranking` | ランキング |
+| `GET /api/ranking?month=current\|YYYY-MM` / `?scope=` | 月間／通算ランキング（1票が通算と今月の両方に入る） |
+| `GET/POST /api/requests` | リクエスト集計・送信。同じ人・同じデジモンは1日1回、1時間10件まで |
 | `GET /api/tags`, `GET/POST /api/tags/{id}` | タグ一覧・付ける／外す |
 
-公開判定は `status = 'approved'` のみ。公式画像は出さず、属性色のカード枠＋公式図鑑リンクで表示する（`image_url` と `image_source` を入れれば画像に差し替わり、AI生成は自動でラベル表示）。
+公開判定は `status = 'approved'` のみ。画像は公式図鑑の画像を直リンク表示（保存しない・出典ラベル付き）。`scripts/build_data.py` の `OFFICIAL_IMAGES = False` で属性色のカード枠に戻せる。CSVに `image_url` と `image_source` を入れた個体はそちらを優先（AI生成は自動でラベル表示）。
+
+リクエストのコメント確認: `npx wrangler d1 execute digi-allure --remote --command "SELECT d.name_ja, r.comment, r.created_at FROM requests r JOIN digimon d ON d.id = r.digimon_id ORDER BY r.created_at DESC LIMIT 50"`
 
 ### ローカルで動かす
 

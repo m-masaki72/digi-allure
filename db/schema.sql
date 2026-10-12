@@ -1,5 +1,6 @@
 -- docs/HANDOVER.md のスキーマ案をベースにしたもの
 -- 差分: digimon.official_id を追加（公式に個別ページがない形態は id と公式IDが一致しないため）
+--       requests（掲載リクエスト）を追加、ratings に月間スコープを追加
 
 CREATE TABLE IF NOT EXISTS digimon (
   id            TEXT PRIMARY KEY,   -- サイト内ID（基本は公式 directory_name）
@@ -51,6 +52,16 @@ CREATE TABLE IF NOT EXISTS match_votes (
 );
 CREATE INDEX IF NOT EXISTS idx_match_votes_voter ON match_votes (voter_hash, created_at);
 
+-- 掲載リクエスト。comment は管理人だけが見る（サイトには件数のみ出す）
+CREATE TABLE IF NOT EXISTS requests (
+  id INTEGER PRIMARY KEY,
+  digimon_id TEXT REFERENCES digimon(id),
+  comment    TEXT,
+  voter_hash TEXT, created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_requests_voter ON requests (voter_hash, created_at);
+
+-- game_scope: 'time-stranger' / 'all' は通算、'month:YYYY-MM'（日本時間）は月間人気投票
 CREATE TABLE IF NOT EXISTS ratings (
   digimon_id TEXT REFERENCES digimon(id),
   game_scope TEXT,

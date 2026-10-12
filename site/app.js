@@ -1,13 +1,14 @@
 const SCOPE = "time-stranger";
 const OFFICIAL_URL = "https://digimon.net/reference/detail.php?directory_name=";
 const LEVEL_ORDER = ["成長期", "成熟期", "完全体", "究極体", "超究極体", "アーマー体", "ハイブリッド体"];
-const IMAGE_CREDIT = { ai_generated: "非公式ファンアート（AI生成）", original_art: "ファンアート" };
+const IMAGE_CREDIT = { official_link: "画像：デジモン図鑑（公式）", ai_generated: "非公式ファンアート（AI生成）", original_art: "ファンアート" };
 
 const state = {
   list: [],
   byId: new Map(),
   tags: null,      // { tags: [...], counts: [...] } API が使えないときは null
-  ranking: null,   // Map(id -> { rank, elo, matches, wins })
+  ranking: null,   // Map(id -> { rank, elo, matches, wins }) 通算
+  candidates: null, // 未掲載デジモン（リクエスト用）
   filters: { q: "", levels: new Set(), type: "", tag: "", sort: "no" },
 };
 const app = document.getElementById("app");
@@ -34,13 +35,21 @@ function toast(message, isError = false) {
   toastTimer = setTimeout(() => (el.className = ""), 1800);
 }
 
+const glyphHTML = (name, level) => `<span class="glyph">${esc([...name][0])}</span><span class="lv">${esc(level)}</span>`;
+
 function art(d) {
   if (d.image_url && d.image_source !== "none") {
     const credit = IMAGE_CREDIT[d.image_source];
-    return `<div class="art" data-attr="${esc(d.attribute)}"><img src="${esc(d.image_url)}" alt="${esc(d.name)}" loading="lazy">${credit ? `<span class="credit">${esc(credit)}</span>` : ""}</div>`;
+    return `<div class="art" data-attr="${esc(d.attribute)}" data-id="${esc(d.id)}"><img src="${esc(d.image_url)}" alt="${esc(d.name)}" loading="lazy">${credit ? `<span class="credit">${esc(credit)}</span>` : ""}</div>`;
   }
-  return `<div class="art" data-attr="${esc(d.attribute)}" aria-hidden="true"><span class="glyph">${esc([...d.name][0])}</span><span class="lv">${esc(d.level)}</span></div>`;
+  return `<div class="art" data-attr="${esc(d.attribute)}" aria-hidden="true">${glyphHTML(d.name, d.level)}</div>`;
 }
+// 画像が読めない（直リンク拒否など）ときは属性色の枠に戻す
+document.addEventListener("error", (e) => {
+  const box = e.target.closest?.(".art[data-id]");
+  const d = box && state.byId.get(box.dataset.id);
+  if (d) box.innerHTML = glyphHTML(d.name, d.level);
+}, true);
 const meta = (d) => `${esc(d.level)}・${esc(d.attribute)}・${esc(d.type)}`;
 
 function tagCounts(id) {
@@ -100,7 +109,11 @@ function renderGrid() {
 }
 
 async function viewList() {
-  await Promise.allSettled([loadTags(), loadRanking()]);
+  const [, , monthly] = await Promise.allSettled([loadTags(), loadRanking(), api("/api/ranking?month=current")]);
+  const m = monthly.value;
+  const top = m?.ranking.find((r) => state.byId.has(r.id));
+  const banner = m ? `<a class="banner" href="#/ranking">${esc(monthLabel(m.current))}の人気投票 開催中
+    <span>${top ? `現在の1位：<b>${esc(state.byId.get(top.id).name)}</b>` : "まだ投票がありません"} ／ 結果を見る →</span></a>` : "";
   const f = state.filters;
   const levels = LEVEL_ORDER.filter((l) => state.list.some((d) => d.level === l));
   const types = [...new Set(state.list.map((d) => d.type))].sort((a, b) => a.localeCompare(b, "ja"));
@@ -108,6 +121,7 @@ async function viewList() {
   app.innerHTML = `
     <h1>お色気デジモン図鑑</h1>
     <p class="lead">管理人が「お色気枠」と認定したデジモンだけを集めた非公式図鑑です。気になる子を見つけたら、詳細ページでタグを付けたり2択投票で推してください。</p>
+    ${banner}
     <div class="filters">
       <div class="row">
         <input type="search" id="q" placeholder="名前・タイプで検索" value="${esc(f.q)}">
@@ -275,21 +289,37 @@ async function viewVote() {
 }
 
 // ---------- ランキング ----------
-async function viewRanking() {
+const monthLabel = (m) => `${Number(m.slice(0, 4))}年${Number(m.slice(5))}月`;
+
+// arg: 省略=今月の人気投票 / "all"=通算 / "YYYY-MM"=過去の月
+async function viewRanking(arg) {
+  const isAll = arg === "all";
+  const month = isAll ? null : /^\d{4}-\d{2}$/.test(arg ?? "") ? arg : null;
   app.innerHTML = '<h1>人気ランキング</h1><p class="loading">集計中…</p>';
-  let ranking;
+  let data;
   try {
-    ranking = await loadRanking(true);
+    data = await api(isAll ? `/api/ranking?scope=${SCOPE}` : `/api/ranking?month=${month ?? "current"}`);
   } catch (e) {
     app.innerHTML = `<h1>人気ランキング</h1><p class="error">${esc(e.message)}</p>`;
     return;
   }
-  const rows = [...ranking.values()].filter((r) => state.byId.has(r.id));
+  if (isAll) state.ranking = new Map(data.ranking.map((r, i) => [r.id, { ...r, rank: i + 1 }]));
+  const rows = data.ranking.map((r, i) => ({ ...r, rank: i + 1 })).filter((r) => state.byId.has(r.id));
   const total = rows.reduce((s, r) => s + r.matches, 0) / 2;
+  const shown = isAll ? "all" : data.month;
+  const tabs = [[data.current, `${monthLabel(data.current)}（開催中）`], ["all", "通算"],
+    ...data.months.filter((m) => m !== data.current).map((m) => [m, `${monthLabel(m)}（確定）`])];
+  const lead = isAll
+    ? `サイト開設からの2択投票をすべて集計したEloレーティングです（累計 ${Math.round(total)} 票）。`
+    : data.final
+      ? `${monthLabel(data.month)}の人気投票の確定結果です（${Math.round(total)} 票）。`
+      : `${monthLabel(data.month)}の人気投票を開催中です。毎月1日（日本時間）にリセットされ、月末の順位がその月の結果になります（現在 ${Math.round(total)} 票）。`;
   app.innerHTML = `
     <h1>人気ランキング</h1>
-    <p class="lead">2択投票の結果をEloレーティングで集計しています（累計 ${Math.round(total)} 票）。対戦数が少ないうちは順位が大きく動きます。</p>
-    <table class="rank">
+    <div class="tabs">${tabs.map(([k, label]) => `<a class="tab${k === shown ? " on" : ""}" href="#/ranking/${k === data.current ? "" : k}">${esc(label)}</a>`).join("")}</div>
+    <p class="lead">${lead}対戦数が少ないうちは順位が大きく動きます。</p>
+    ${rows.length ? "" : '<p class="empty">まだ投票がありません。最初の1票をどうぞ！</p>'}
+    <table class="rank"${rows.length ? "" : " hidden"}>
       <thead><tr><th>順位</th><th>デジモン</th><th>世代・タイプ</th><th class="num">レート</th><th class="num">対戦</th><th class="num">勝率</th></tr></thead>
       <tbody>${rows.map((r) => {
         const d = state.byId.get(r.id);
@@ -342,6 +372,64 @@ async function viewTypes() {
     ${group((d) => d.attribute).map(block).join("")}`;
 }
 
+// ---------- 掲載リクエスト ----------
+async function viewRequest() {
+  if (!state.candidates) {
+    state.candidates = await fetch("/data/candidates.json").then((r) => r.json());
+  }
+  const byName = new Map(state.candidates.map((c) => [c.name, c]));
+  app.innerHTML = `
+    <h1>掲載リクエスト</h1>
+    <p class="lead">「この子もお色気枠では？」というデジモンを推薦してください。管理人が参考にして掲載を検討します（タイムストレンジャー登場デジモンのみ）。</p>
+    <form class="request-form" id="reqform">
+      <label for="reqname">デジモン</label>
+      <input id="reqname" list="reqlist" placeholder="名前を入力して候補から選択" autocomplete="off" required>
+      <datalist id="reqlist">${state.candidates.map((c) => `<option value="${esc(c.name)}">${esc(c.level)}</option>`).join("")}</datalist>
+      <label for="reqcomment">推しポイント（任意・200文字まで。管理人だけが読みます）</label>
+      <textarea id="reqcomment" maxlength="200" rows="3"></textarea>
+      <div><button class="btn primary" type="submit">リクエストする</button></div>
+    </form>
+    <h2>リクエストの多いデジモン</h2>
+    <div id="reqtop"><p class="loading">読み込み中…</p></div>`;
+
+  async function renderTop() {
+    const box = document.getElementById("reqtop");
+    try {
+      const { requests } = await api("/api/requests");
+      box.innerHTML = requests.length
+        ? `<table class="rank"><thead><tr><th>順位</th><th>デジモン</th><th>世代</th><th class="num">リクエスト</th></tr></thead><tbody>${requests
+            .map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.level)}</td><td class="num">${r.n}</td></tr>`)
+            .join("")}</tbody></table>`
+        : '<p class="empty">まだリクエストはありません。</p>';
+    } catch (e) {
+      box.innerHTML = `<p class="error">${esc(e.message)}</p>`;
+    }
+  }
+
+  document.getElementById("reqform").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("reqname").value.trim();
+    const target = byName.get(name);
+    if (!target) {
+      toast(state.list.some((d) => d.name === name) ? "そのデジモンはすでに掲載されています" : "候補の中から選んでください", true);
+      return;
+    }
+    const btn = e.target.querySelector("button");
+    btn.disabled = true;
+    try {
+      await api("/api/requests", { method: "POST", body: JSON.stringify({ id: target.id, comment: document.getElementById("reqcomment").value }) });
+      toast(`${target.name} をリクエストしました`);
+      e.target.reset();
+      renderTop();
+    } catch (err) {
+      toast(err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  renderTop();
+}
+
 // ---------- ルーティング ----------
 async function route() {
   if (voteKeyHandler) {
@@ -351,14 +439,15 @@ async function route() {
   document.title = "デジアリュール — お色気デジモン図鑑（非公式）";
   const hash = location.hash.replace(/^#/, "") || "/";
   const [, page, arg] = hash.split("/");
-  const nav = { "": "list", d: "list", vote: "vote", ranking: "ranking", types: "types" }[page ?? ""] ?? "list";
+  const nav = { "": "list", d: "list", vote: "vote", ranking: "ranking", types: "types", request: "request" }[page ?? ""] ?? "list";
   document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
   window.scrollTo(0, 0);
   try {
     if (page === "d") await viewDetail(decodeURIComponent(arg ?? ""));
     else if (page === "vote") await viewVote();
-    else if (page === "ranking") await viewRanking();
+    else if (page === "ranking") await viewRanking(arg);
     else if (page === "types") await viewTypes();
+    else if (page === "request") await viewRequest();
     else await viewList();
   } catch (e) {
     app.innerHTML = `<p class="error">${esc(e.message)}</p>`;

@@ -1,6 +1,7 @@
 """マスターCSVから公開用データを生成する。
 
 - site/data/digimon.json : 公開サイト用（status=approved のみ）
+- site/data/candidates.json : リクエスト画面用（未掲載の名前と世代のみ）
 - db/seed.sql            : D1 投入用（全件。公開判定は API 側で status を見る）
 
 使い方: python3 -I -X utf8 scripts/build_data.py
@@ -13,6 +14,7 @@ import tempfile
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 MASTER = os.path.join(ROOT, "data", "digimon_ts_master.csv")
 JSON_OUT = os.path.join(ROOT, "site", "data", "digimon.json")
+CANDIDATES_OUT = os.path.join(ROOT, "site", "data", "candidates.json")
 SEED_OUT = os.path.join(ROOT, "db", "seed.sql")
 GAME_ID = "time-stranger"
 GAME_TITLE = "デジモンストーリー タイムストレンジャー"
@@ -25,6 +27,9 @@ TAGS = [
 ]
 # Game8 表記 → 公式表記
 ATTRIBUTE_MAP = {"アンノウン": "不明"}
+# 公式図鑑の画像を直リンク表示する（保存はしない）。権利者から求められたら False にして再ビルド・再デプロイ
+OFFICIAL_IMAGES = True
+OFFICIAL_IMAGE_URL = "https://digimon.net/cimages/digimon/{}.jpg"
 
 
 def sql(v):
@@ -52,6 +57,10 @@ def load():
         # 公式に個別ページがない形態は directory_name が重複するので、サイト内IDを分ける
         sid = official if official not in used else f"{official}--{r['game_no'] or r['game8_id']}"
         used.add(sid)
+        image_url, image_source = r.get("image_url") or None, r.get("image_source") or "none"
+        # 公式IDを借りている別形態（sid != official）は別の姿が出てしまうので対象外
+        if not image_url and OFFICIAL_IMAGES and official and sid == official:
+            image_url, image_source = OFFICIAL_IMAGE_URL.format(official), "official_link"
         out.append({
             "id": sid,
             "official_id": official or None,
@@ -63,8 +72,8 @@ def load():
             "type": r["official_type"],
             "status": r["status"],
             "blurb": r.get("my_blurb") or None,
-            "image_url": r.get("image_url") or None,
-            "image_source": r.get("image_source") or "none",
+            "image_url": image_url,
+            "image_source": image_source,
         })
     return out
 
@@ -76,6 +85,9 @@ def main():
         for d in items if d["status"] == "approved"
     ]
     write_atomic(JSON_OUT, json.dumps(public, ensure_ascii=False, indent=1) + "\n")
+    # リクエスト画面用：未掲載のデジモン（名前と世代だけ）
+    candidates = [{"id": d["id"], "name": d["name"], "level": d["level"]} for d in items if d["status"] != "approved"]
+    write_atomic(CANDIDATES_OUT, json.dumps(candidates, ensure_ascii=False) + "\n")
 
     lines = [
         "-- scripts/build_data.py が生成。手で編集しない",
