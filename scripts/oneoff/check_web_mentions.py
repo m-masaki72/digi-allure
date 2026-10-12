@@ -1,12 +1,12 @@
 """ネットで「お色気・女性型」として名前が挙がったデジモンを、マスターの登場有無・判定状態と突き合わせる。
-使い方: python3 -I -X utf8 scripts/check_web_mentions.py [判定済みCSV]
+使い方: python3 -I -X utf8 scripts/oneoff/check_web_mentions.py [判定済みCSV]
 """
 import csv
 import os
 import sys
 import unicodedata
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 MASTER = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "data", "digimon_ts_master.csv")
 
 # 出典ごとに名前が挙がったデジモン（2026-10-12 調査）

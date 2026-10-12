@@ -123,7 +123,7 @@ function parseCSV(text) {
     if (q) {
       if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; }
       else f += c;
-    } else if (c === '"') q = true;
+    } else if (c === '"' && f === "") q = true;
     else if (c === ",") { row.push(f); f = ""; }
     else if (c === "\n" || c === "\r") {
       if (c === "\r" && text[i + 1] === "\n") i++;

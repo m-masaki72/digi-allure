@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 
 URL = "https://digimon.net/reference/request.php"
-OUT = os.path.join(os.path.dirname(__file__), "..", "work", "official_index.csv")
+OUT = os.path.join(os.path.dirname(__file__), "..", "..", "work", "official_index.csv")
 WAIT_SEC = 2.0
 MAX_PAGES = 60
 

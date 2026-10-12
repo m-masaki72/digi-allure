@@ -3,7 +3,7 @@
 - 既に directory_name が入っている行は触らない（手入力を優先）
 - 一致しなかった行は note に「公式ID未照合」を追記する
 - 世代が食い違う一致は note に残す
-使い方: python3 -I scripts/match_directory_name.py [--dry-run]
+使い方: python3 -I scripts/oneoff/match_directory_name.py [--dry-run]
 """
 import csv
 import os
@@ -12,7 +12,7 @@ import sys
 import tempfile
 import unicodedata
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 MASTER = os.path.join(ROOT, "data", "digimon_ts_master.csv")
 INDEX = os.path.join(ROOT, "work", "official_index.csv")
 UNMATCHED_NOTE = "公式ID未照合"

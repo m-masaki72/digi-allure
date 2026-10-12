@@ -11,9 +11,9 @@ STATUSES = ("candidate", "approved", "excluded")
 
 
 def main():
-    status, nos = sys.argv[1], set(sys.argv[2:])
-    if status not in STATUSES or not nos:
+    if len(sys.argv) < 3 or sys.argv[1] not in STATUSES:
         sys.exit(__doc__)
+    status, nos = sys.argv[1], set(sys.argv[2:])
     with open(MASTER, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         fields, rows = reader.fieldnames, list(reader)
