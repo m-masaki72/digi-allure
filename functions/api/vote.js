@@ -8,15 +8,13 @@ const MAX_VOTES_PER_DAY = 300;
 const CHECKS = `SELECT
   (SELECT COUNT(*) FROM match_votes WHERE ip_hash = ?1 AND created_at >= ?5) AS recent,
   (SELECT COUNT(*) FROM match_votes WHERE ip_hash = ?1 AND created_at >= ?6) AS today,
-  (SELECT COUNT(*) FROM match_votes WHERE ip_hash = ?1 AND game_scope = ?2 AND created_at >= ?6
-     AND ((winner_id = ?3 AND loser_id = ?4) OR (winner_id = ?4 AND loser_id = ?3))) AS dup,
   (SELECT COUNT(*) FROM ratings r JOIN digimon d ON d.id = r.digimon_id
      WHERE r.game_scope = ?2 AND d.status = 'approved' AND r.digimon_id IN (?3, ?4)) AS found`;
 
-// 判定と記録を同じ文で行い、同時に届いた投票でも上限・重複を超えないようにする
+// 判定と記録を同じ文で行い、同時に届いた投票でも上限を超えないようにする。同じ組み合わせの重複は uq_match_votes_pair で弾く
 const INSERT_VOTE = `INSERT INTO match_votes (id, winner_id, loser_id, game_scope, voter_hash, ip_hash, created_at)
   SELECT ?7, ?8, ?9, ?2, ?10, ?1, ?11 FROM (${CHECKS})
-  WHERE recent < ${MAX_VOTES_PER_MINUTE} AND today < ${MAX_VOTES_PER_DAY} AND dup = 0 AND found = 2
+  WHERE recent < ${MAX_VOTES_PER_MINUTE} AND today < ${MAX_VOTES_PER_DAY} AND found = 2
   ON CONFLICT DO NOTHING`;
 
 // ?1 投票ID ?2 scope ?3 winner ?4 loser。投票が記録されたときだけ、その時点のレートから計算して反映する
@@ -58,8 +56,7 @@ export async function onRequestPost({ request, env }) {
   const voteId = newRowId();
 
   // 不正対策はIP単位で数える（同じIPを共有する人同士でも、同じ組み合わせは1日1票）
-  const [checks, inserted, before, after] = await env.DB.batch([
-    env.DB.prepare(CHECKS).bind(ip, scope, a, b, minuteAgo, dayStart(now)),
+  const [inserted, before, after] = await env.DB.batch([
     env.DB.prepare(INSERT_VOTE)
       .bind(ip, scope, a, b, minuteAgo, dayStart(now), voteId, winner, loser, voter, now.toISOString()),
     env.DB.prepare("SELECT digimon_id, elo FROM ratings WHERE game_scope = ? AND digimon_id IN (?, ?)").bind(scope, winner, loser),
@@ -67,7 +64,7 @@ export async function onRequestPost({ request, env }) {
     ...(scope === DEFAULT_SCOPE ? monthlyUpdates(env, voteId, winner, loser, now) : []),
   ]);
   if (!inserted.meta.changes) {
-    const c = checks.results[0];
+    const c = await env.DB.prepare(CHECKS).bind(ip, scope, a, b, minuteAgo, dayStart(now)).first();
     if (c.found < 2) return fail(404, "対象のデジモンが見つかりません");
     if (c.recent >= MAX_VOTES_PER_MINUTE) return fail(429, "投票が速すぎます。少し待ってからどうぞ");
     if (c.today >= MAX_VOTES_PER_DAY) return fail(429, "今日の投票数の上限に達しました。また明日どうぞ");

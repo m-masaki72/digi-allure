@@ -3,7 +3,7 @@ import { json, fail, clientIds, readJSON, dayStart } from "../_lib/api.js";
 const MAX_REQUESTS_PER_HOUR = 10;
 const MAX_COMMENT = 200;
 // 幼年期は掲載対象外なのでリクエストも受け付けない
-const NOT_REQUESTABLE = "COALESCE(d.level, '') IN ('幼年期Ⅰ', '幼年期Ⅱ')";
+const NOT_REQUESTABLE = "COALESCE(d.level, '') LIKE '幼年期%'";
 
 // ?1 digimon ?2 ip ?3 1時間前 ?4 今日の開始
 const CHECKS = `SELECT
@@ -36,16 +36,13 @@ export async function onRequestPost({ request, env }) {
   const { voter, ip } = await clientIds(request, env);
   const now = new Date();
   const hourAgo = new Date(now.getTime() - 3_600_000).toISOString();
-  const [checks, inserted] = await env.DB.batch([
-    env.DB.prepare(CHECKS).bind(id, ip, hourAgo, dayStart(now)),
-    env.DB.prepare(
-      `INSERT INTO requests (digimon_id, comment, voter_hash, ip_hash, created_at)
-       SELECT ?1, ?5, ?6, ?2, ?7 FROM (${CHECKS})
-       WHERE open AND recent < ${MAX_REQUESTS_PER_HOUR} AND dup = 0`
-    ).bind(id, ip, hourAgo, dayStart(now), comment || null, voter, now.toISOString()),
-  ]);
+  const inserted = await env.DB.prepare(
+    `INSERT INTO requests (digimon_id, comment, voter_hash, ip_hash, created_at)
+     SELECT ?1, ?5, ?6, ?2, ?7 FROM (${CHECKS})
+     WHERE open AND recent < ${MAX_REQUESTS_PER_HOUR} AND dup = 0`
+  ).bind(id, ip, hourAgo, dayStart(now), comment || null, voter, now.toISOString()).run();
   if (!inserted.meta.changes) {
-    const c = checks.results[0];
+    const c = await env.DB.prepare(CHECKS).bind(id, ip, hourAgo, dayStart(now)).first();
     if (c.approved) return fail(409, "そのデジモンはすでに掲載済みです");
     if (!c.open) return fail(404, "そのデジモンは掲載範囲外です");
     if (c.recent >= MAX_REQUESTS_PER_HOUR) return fail(429, "リクエストが多すぎます。時間をおいてどうぞ");

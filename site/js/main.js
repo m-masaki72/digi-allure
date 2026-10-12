@@ -1,5 +1,6 @@
 import { state, navSeq, beginNav } from "./state.js";
 import { app, esc } from "./ui.js";
+import { api } from "./api.js";
 import { viewList } from "./views/list.js";
 import { viewDetail } from "./views/detail.js";
 import { viewVote, stopVoteKeys } from "./views/vote.js";
@@ -31,8 +32,7 @@ async function route() {
 
 async function main() {
   try {
-    const res = await fetch("/data/digimon.json");
-    state.list = await res.json();
+    state.list = await api("/data/digimon.json");
   } catch {
     app.innerHTML = '<p class="error">図鑑データを読み込めませんでした。</p>';
     return;

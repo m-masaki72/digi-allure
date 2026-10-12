@@ -1,12 +1,12 @@
 import { state, navSeq, tagCounts, loadRanking, loadMonthly, loadTags } from "../state.js";
-import { app, esc, art, monthLabel } from "../ui.js";
+import { app, esc, art, monthLabel, detailHref } from "../ui.js";
 
 const LEVEL_ORDER = ["成長期", "成熟期", "完全体", "究極体", "超究極体", "アーマー体", "ハイブリッド体"];
 
 // ---------- 図鑑一覧 ----------
 function cardHTML(d) {
   const tags = tagCounts(d.id).slice(0, 2);
-  return `<a class="card" href="#/d/${encodeURIComponent(d.id)}">
+  return `<a class="card" href="${detailHref(d)}">
     ${art(d)}
     <div class="body">
       <div class="no">No.${esc(d.no ?? "—")}</div>
@@ -103,6 +103,6 @@ export function viewList() {
   });
   const whenCurrent = (fn) => () => { if (seq === navSeq) fn(); };
   loadTags().catch(() => null).then(whenCurrent(() => { renderTagChips(true); renderGrid(); }));
-  loadRanking().catch(() => null).then(whenCurrent(() => { renderSortOptions(); renderGrid(); }));
+  loadRanking().catch(() => null).then(whenCurrent(() => { renderSortOptions(); if (f.sort === "popular") renderGrid(); }));
   loadMonthly().catch(() => null).then(whenCurrent(renderBanner));
 }

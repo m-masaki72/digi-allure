@@ -6,7 +6,7 @@ import { app, esc, toast } from "../ui.js";
 export async function viewRequest() {
   const seq = navSeq;
   if (!state.candidates) {
-    state.candidates = await fetch("/data/candidates.json").then((r) => r.json());
+    state.candidates = await api("/data/candidates.json");
     if (seq !== navSeq) return;
   }
   const byName = new Map(state.candidates.map((c) => [c.name, c]));

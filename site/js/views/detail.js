@@ -5,7 +5,7 @@ import { app, esc, art, toast } from "../ui.js";
 const OFFICIAL_URL = "https://digimon.net/reference/detail.php?directory_name=";
 
 // ---------- 詳細 ----------
-function tagButtons(id, tags) {
+function tagButtons(tags) {
   const cats = [...new Set(tags.map((t) => t.category))];
   return cats.map((cat) => `<div class="tag-group"><div class="cat">${esc(cat)}</div>${tags
     .filter((t) => t.category === cat)
@@ -57,7 +57,7 @@ export async function viewDetail(id) {
   try {
     const data = await api(`/api/tags/${encodeURIComponent(id)}`);
     if (seq !== navSeq) return;
-    box.innerHTML = tagButtons(id, data.tags);
+    box.innerHTML = tagButtons(data.tags);
   } catch (e) {
     if (seq === navSeq) box.innerHTML = `<p class="error">${esc(e.message)}</p>`;
     return;
@@ -68,7 +68,7 @@ export async function viewDetail(id) {
     box.querySelectorAll("button").forEach((x) => (x.disabled = true));
     try {
       const data = await api(`/api/tags/${encodeURIComponent(id)}`, { method: "POST", body: JSON.stringify({ tag_id: Number(b.dataset.tag) }) });
-      box.innerHTML = tagButtons(id, data.tags);
+      box.innerHTML = tagButtons(data.tags);
       state.tags = null; // 一覧のタグ表示を次回取り直す
     } catch (err) {
       toast(err.message, true);

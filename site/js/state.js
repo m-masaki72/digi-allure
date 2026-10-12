@@ -15,20 +15,28 @@ export const state = {
 export let navSeq = 0;
 export const beginNav = () => ++navSeq;
 
-export function tagCounts(id) {
-  if (!state.tags) return [];
-  const label = new Map(state.tags.tags.map((t) => [t.id, t.label]));
-  return state.tags.counts
-    .filter((c) => c.id === id)
-    .sort((a, b) => b.n - a.n)
-    .map((c) => ({ ...c, label: label.get(c.tag_id) }));
+// 一覧はカードごとに引くので、state.tags が差し替わったときだけ作り直す
+let tagIndex = { src: null, labels: new Map(), byId: new Map() };
+function indexTags() {
+  if (tagIndex.src === state.tags) return tagIndex;
+  const labels = new Map((state.tags?.tags ?? []).map((t) => [t.id, t.label]));
+  const byId = new Map();
+  for (const c of [...(state.tags?.counts ?? [])].sort((a, b) => b.n - a.n)) {
+    if (!byId.has(c.id)) byId.set(c.id, []);
+    byId.get(c.id).push({ ...c, label: labels.get(c.tag_id) });
+  }
+  return (tagIndex = { src: state.tags, labels, byId });
 }
+export const tagLabels = () => indexTags().labels;
+export const tagCounts = (id) => indexTags().byId.get(id) ?? [];
+
+export const withRank = (ranking) => ranking.map((r, i) => ({ ...r, rank: i + 1 }));
+export const setRanking = (ranking) => (state.ranking = new Map(withRank(ranking).map((r) => [r.id, r])));
 
 export async function loadRanking(force = false) {
   if (state.ranking && !force) return state.ranking;
   const data = await api(`/api/ranking?scope=${SCOPE}`);
-  state.ranking = new Map(data.ranking.map((r, i) => [r.id, { ...r, rank: i + 1 }]));
-  return state.ranking;
+  return setRanking(data.ranking);
 }
 export async function loadMonthly() {
   if (!state.monthly) state.monthly = await api("/api/ranking?month=current");

@@ -1,6 +1,6 @@
 import { api } from "../api.js";
-import { SCOPE, state, navSeq } from "../state.js";
-import { app, esc, monthLabel } from "../ui.js";
+import { SCOPE, state, navSeq, withRank, setRanking } from "../state.js";
+import { app, esc, monthLabel, detailHref } from "../ui.js";
 
 // ---------- ランキング ----------
 // arg: 省略=今月の人気投票 / "all"=通算 / "YYYY-MM"=過去の月
@@ -16,10 +16,10 @@ export async function viewRanking(arg) {
     if (seq === navSeq) app.innerHTML = `<h1>人気ランキング</h1><p class="error">${esc(e.message)}</p>`;
     return;
   }
-  if (isAll) state.ranking = new Map(data.ranking.map((r, i) => [r.id, { ...r, rank: i + 1 }]));
+  if (isAll) setRanking(data.ranking);
   else if (!month) state.monthly = data;
   if (seq !== navSeq) return;
-  const rows = data.ranking.map((r, i) => ({ ...r, rank: i + 1 })).filter((r) => state.byId.has(r.id));
+  const rows = withRank(data.ranking).filter((r) => state.byId.has(r.id));
   const total = rows.reduce((s, r) => s + r.matches, 0) / 2;
   const shown = isAll ? "all" : data.month;
   const tabs = [[data.current, `${monthLabel(data.current)}（開催中）`], ["all", "通算"],
@@ -40,7 +40,7 @@ export async function viewRanking(arg) {
         const d = state.byId.get(r.id);
         return `<tr class="${r.rank <= 3 ? "top" : ""}">
           <td>${r.rank}</td>
-          <td><a href="#/d/${encodeURIComponent(d.id)}">${esc(d.name)}</a></td>
+          <td><a href="${detailHref(d)}">${esc(d.name)}</a></td>
           <td>${esc(d.level)}・${esc(d.type)}</td>
           <td class="num">${Math.round(r.elo)}</td>
           <td class="num">${r.matches}</td>

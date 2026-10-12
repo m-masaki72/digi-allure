@@ -64,11 +64,11 @@ def load():
         sid = official if owner[official] is r else f"{official}--{r['game_no'] or r['game8_id']}"
         image_url, image_source = r.get("image_url") or None, r.get("image_source") or "none"
         # 公式IDを借りている別形態（sid != official）は別の姿が出てしまうので対象外
-        if not image_url and OFFICIAL_IMAGES and official and sid == official:
+        if not image_url and OFFICIAL_IMAGES and sid == official:
             image_url, image_source = OFFICIAL_IMAGE_URL.format(official), "official_link"
         out.append({
             "id": sid,
-            "official_id": official or None,
+            "official_id": official,
             "no": int(r["game_no"]) if r["game_no"] else None,
             "name": r["name_ja"],
             "name_en": r.get("name_en") or None,

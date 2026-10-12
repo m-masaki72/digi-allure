@@ -29,5 +29,6 @@ document.addEventListener("error", (e) => {
   const d = box && state.byId.get(box.dataset.id);
   if (d) box.innerHTML = glyphHTML(d.name, d.level);
 }, true);
+export const detailHref = (d) => `#/d/${encodeURIComponent(d.id)}`;
 export const meta = (d) => `${esc(d.level)}・${esc(d.attribute)}・${esc(d.type)}`;
 export const monthLabel = (m) => `${Number(m.slice(0, 4))}年${Number(m.slice(5))}月`;

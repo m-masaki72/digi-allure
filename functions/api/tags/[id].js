@@ -51,8 +51,7 @@ export async function onRequestPost({ request, env, params }) {
   const minuteAgo = new Date(now.getTime() - 60_000).toISOString();
   const actionId = newRowId();
   const action = "SELECT 1 FROM tag_actions WHERE id = ?4 AND kind = ?5";
-  const [checks, recorded, , , tags] = await env.DB.batch([
-    env.DB.prepare(CHECKS).bind(id, tagId, voter, ip, minuteAgo, dayStart(now)),
+  const [recorded, , , tags] = await env.DB.batch([
     env.DB.prepare(RECORD).bind(id, tagId, voter, ip, minuteAgo, dayStart(now), actionId, now.toISOString()),
     env.DB.prepare(`DELETE FROM digimon_tags WHERE digimon_id = ?1 AND tag_id = ?2 AND voter_hash = ?3 AND EXISTS (${action})`)
       .bind(id, tagId, voter, actionId, "remove"),
@@ -63,7 +62,7 @@ export async function onRequestPost({ request, env, params }) {
     tagsQuery(env, id, voter),
   ]);
   if (!recorded.meta.changes) {
-    const c = checks.results[0];
+    const c = await env.DB.prepare(CHECKS).bind(id, tagId, voter, ip, minuteAgo, dayStart(now)).first();
     if (!c.approved) return fail(404, "見つかりません");
     if (!c.tag) return fail(404, "タグが見つかりません");
     if (c.recent >= MAX_TAGS_PER_MINUTE) return fail(429, "操作が速すぎます。少し待ってからどうぞ");
