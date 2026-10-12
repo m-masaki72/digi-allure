@@ -30,9 +30,9 @@ Cloudflare Pages（`site/`）＋ Pages Functions（`functions/api/`）＋ D1。
 | `POST /api/vote` | 投票。同じ回線（IP）・同じペアは1日1回、IPあたり1分30票・1日300票まで |
 | `GET /api/ranking?month=current\|YYYY-MM` / `?scope=` | 月間／通算ランキング（1票が通算と今月の両方に入る） |
 | `GET/POST /api/requests` | リクエスト集計・送信。同じ回線（IP）・同じデジモンは1日1回、IPあたり1時間10件まで |
-| `GET /api/tags`, `GET/POST /api/tags/{id}` | タグ一覧・付ける／外す。同じ回線（IP）・同じタグは1日1回、IPあたり1分60件・1日300件まで |
+| `GET /api/tags`, `GET/POST /api/tags/{id}` | タグ一覧・付ける／外す。同じ回線（IP）・同じタグは1日1回、付ける・外す操作はIPあたり1分60件・1日300件まで |
 
-投票者の識別は日替わりソルトのハッシュのみ（生IPは保存しない）。`voter_hash`（IP+UA）は「自分が付けたタグ」の判定、`ip_hash`（IPのみ）は不正対策の集計に使う。IPを大量に用意する相手は防げない（許容）。
+投票者の識別は日本時間の日替わりソルト（`VOTE_SECRET` から HMAC で導出）のハッシュのみ（生IPは保存しない。IPv6 は /64 単位）。ソルトは日付から決まるので、`VOTE_SECRET` と DB の両方を持つ人は IPv4 を総当たりして元の IP を割り出せる（匿名化ではなく仮名化）。`voter_hash`（IP+UA）は「自分が付けたタグ」の判定、`ip_hash`（IPのみ）は不正対策の集計に使う。IPを大量に用意する相手は防げない（許容）。
 
 公開判定は `status = 'approved'` のみ。画像は公式図鑑の画像を直リンク表示（保存しない・出典ラベル付き）。`scripts/build_data.py` の `OFFICIAL_IMAGES = False` で属性色のカード枠に戻せる。CSVに `image_url` と `image_source` を入れた個体はそちらを優先（AI生成は自動でラベル表示）。
 
@@ -48,7 +48,7 @@ npx wrangler d1 execute digi-allure --local --file db/seed.sql
 npx wrangler pages dev --port 8788                 # http://127.0.0.1:8788
 ```
 
-### 本番デプロイ（未実施）
+### 本番デプロイ
 
 ```sh
 npx wrangler d1 create digi-allure                 # 出力された database_id を wrangler.toml に書く
@@ -60,6 +60,8 @@ npx wrangler pages deploy
 ```
 
 判定を変えたら `build_data.py` → `seed.sql` を再投入（レーティングは保持される）→ 再デプロイ。
+
+`db/schema.sql` は何度流しても安全（`CREATE ... IF NOT EXISTS` のみ）だが、既存テーブルへの列追加は反映されない。列を足すときは `db/migrations/NNNN_*.sql` に `ALTER TABLE` を書き、未適用の DB にだけ schema.sql より先に1回流す。
 
 ## 判定の流れ
 

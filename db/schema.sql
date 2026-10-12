@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS digimon (
   status_note   TEXT,
   my_blurb      TEXT
 );
+CREATE INDEX IF NOT EXISTS idx_digimon_status ON digimon (status);
 
 CREATE TABLE IF NOT EXISTS games (id TEXT PRIMARY KEY, title TEXT NOT NULL, released TEXT);
 
@@ -45,6 +46,13 @@ CREATE TABLE IF NOT EXISTS digimon_tags (
 );
 CREATE INDEX IF NOT EXISTS idx_digimon_tags_ip ON digimon_tags (ip_hash, created_at);
 
+-- タグの付け外しの操作記録。外す操作も含めてIP単位の速度制限に数える
+CREATE TABLE IF NOT EXISTS tag_actions (
+  id INTEGER PRIMARY KEY,
+  ip_hash TEXT, kind TEXT, created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_tag_actions_ip ON tag_actions (ip_hash, created_at);
+
 CREATE TABLE IF NOT EXISTS match_votes (
   id INTEGER PRIMARY KEY,
   winner_id TEXT REFERENCES digimon(id),
@@ -53,6 +61,10 @@ CREATE TABLE IF NOT EXISTS match_votes (
   voter_hash TEXT, ip_hash TEXT, created_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_match_votes_ip ON match_votes (ip_hash, created_at);
+CREATE INDEX IF NOT EXISTS idx_match_votes_winner ON match_votes (winner_id, game_scope, created_at);
+-- 同じ組み合わせは1IP1日1票。ip_hash は日替わりソルトなので、日付の列がなくても1日単位になる
+CREATE UNIQUE INDEX IF NOT EXISTS uq_match_votes_pair
+  ON match_votes (ip_hash, game_scope, min(winner_id, loser_id), max(winner_id, loser_id));
 
 -- 掲載リクエスト。comment は管理人だけが見る（サイトには件数のみ出す）
 CREATE TABLE IF NOT EXISTS requests (

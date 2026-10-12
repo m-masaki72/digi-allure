@@ -32,6 +32,8 @@ npx wrangler pages functions build --outdir <tmp>            # Functions のバ�
 
 - `site/_headers` の CSP が厳しい: インラインの `style` / `<style>` / スクリプト、外部フォントと CDN は使えない。画像は `self`・`data:`・`https://digimon.net` のみ
 - Functions は `env.DB`（D1 binding 名 `DB`）と `env.VOTE_SECRET` を参照する。`wrangler d1 create` が出す binding 名の例に書き換えない
+- 書き込み API は判定と書き込みを1回の D1 batch に収め、`INSERT ... SELECT ... WHERE 条件` で原子的にする（同時リクエストで上限をすり抜けないため）
+- POST は `functions/api/_middleware.js` が `Content-Type: application/json` と同一オリジンを要求する
 - `VOTE_SECRET` は本番環境にしか登録していない（`wrangler pages secret put` はプレビュー環境を指定できない）。プレビューのデプロイでは投票が失敗する
 - 公式・Game8 の画像や説明文は転載しない（`docs/HANDOVER.md` §3）。公式画像は直リンク表示と出典ラベルだけにする
 

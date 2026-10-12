@@ -13,14 +13,16 @@ export async function onRequestGet({ request, env }) {
 
   if (month !== null) {
     if (!isMonthKey(month)) return fail(400, "month が不正です");
+    if (month > current) return fail(400, "その月の人気投票はまだ始まっていません");
+    if (month < current && !months.includes(month)) return fail(404, "その月の人気投票の記録はありません");
     const [start, end] = monthRange(month);
     const { results } = await env.DB.prepare(
       `SELECT r.digimon_id AS id, r.elo, r.matches,
               (SELECT COUNT(*) FROM match_votes v WHERE v.winner_id = r.digimon_id AND v.game_scope = ?
                  AND v.created_at >= ? AND v.created_at < ?) AS wins
        FROM ratings r JOIN digimon d ON d.id = r.digimon_id
-       WHERE r.game_scope = ? AND d.status = 'approved'
-       ORDER BY r.elo DESC, r.matches DESC`
+       WHERE r.game_scope = ? AND d.status = 'approved' AND r.matches > 0
+       ORDER BY r.elo DESC, r.matches DESC, r.digimon_id`
     ).bind(DEFAULT_SCOPE, start, end, monthScope(month)).all();
     return json({ month, current, months, final: month < current, ranking: results });
   }
@@ -31,8 +33,8 @@ export async function onRequestGet({ request, env }) {
     `SELECT r.digimon_id AS id, r.elo, r.matches,
             (SELECT COUNT(*) FROM match_votes v WHERE v.winner_id = r.digimon_id AND v.game_scope = r.game_scope) AS wins
      FROM ratings r JOIN digimon d ON d.id = r.digimon_id
-     WHERE r.game_scope = ? AND d.status = 'approved'
-     ORDER BY r.elo DESC, r.matches DESC`
+     WHERE r.game_scope = ? AND d.status = 'approved' AND r.matches > 0
+     ORDER BY r.elo DESC, r.matches DESC, r.digimon_id`
   ).bind(scope).all();
   return json({ scope, current, months, ranking: results });
 }
