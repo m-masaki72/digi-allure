@@ -15,7 +15,8 @@ export function stopVoteKeys() {
   }
 }
 
-export async function viewVote() {
+// startId を渡すと、その子を最初の勝ち残りにして始める（詳細ページの「この子で推し診断」）
+export async function viewVote(startId) {
   const seq = navSeq;
   document.title = "推し診断 — デジアリュール";
   app.innerHTML = `
@@ -29,7 +30,7 @@ export async function viewVote() {
     </div>`;
   let pair = null;
   let busy = false;
-  let keep = null; // 勝ち残っている子
+  let keep = state.byId.has(startId) ? startId : null; // 勝ち残っている子
   let answered = 0;
   const seen = [];
 

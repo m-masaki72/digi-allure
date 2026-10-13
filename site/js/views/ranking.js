@@ -25,7 +25,7 @@ export async function viewRanking(arg) {
   const tabs = [[data.current, `${monthLabel(data.current)}（開催中）`], ["all", "通算"],
     ...data.months.filter((m) => m !== data.current).map((m) => [m, `${monthLabel(m)}（確定）`])];
   const lead = isAll
-    ? `サイト開設からの2択投票をすべて集計したEloレーティングです（累計 ${Math.round(total)} 票）。`
+    ? `サイト開設からの推し診断の票をすべて集計した通算ランキングです（累計 ${Math.round(total)} 票）。`
     : data.final
       ? `${monthLabel(data.month)}の人気投票の確定結果です（${Math.round(total)} 票）。`
       : `${monthLabel(data.month)}の人気投票を開催中です。毎月1日（日本時間）にリセットされ、月末の順位がその月の結果になります（現在 ${Math.round(total)} 票）。`;
@@ -35,18 +35,17 @@ export async function viewRanking(arg) {
     <p class="lead">${lead}対戦数が少ないうちは順位が大きく動きます。</p>
     ${rows.length ? "" : '<p class="empty">まだ投票がありません。最初の1票をどうぞ！</p>'}
     <table class="rank"${rows.length ? "" : " hidden"}>
-      <thead><tr><th>順位</th><th>デジモン</th><th>世代・タイプ</th><th class="num">レート</th><th class="num">対戦</th><th class="num">勝率</th></tr></thead>
+      <thead><tr><th>順位</th><th>デジモン</th><th>世代・タイプ</th><th class="num">対戦</th><th class="num">勝率</th></tr></thead>
       <tbody>${rows.map((r) => {
         const d = state.byId.get(r.id);
         return `<tr class="${r.rank <= 3 ? "top" : ""}">
           <td>${r.rank}</td>
           <td><a href="${detailHref(d)}">${esc(d.name)}</a></td>
           <td>${esc(d.level)}・${esc(d.type)}</td>
-          <td class="num">${Math.round(r.elo)}</td>
           <td class="num">${r.matches}</td>
           <td class="num">${r.matches ? Math.round((r.wins / r.matches) * 100) + "%" : "—"}</td>
         </tr>`;
       }).join("")}</tbody>
     </table>
-    <div class="actions"><a class="btn primary" href="#/vote">投票する</a></div>`;
+    <div class="actions"><a class="btn primary" href="#/vote">推し診断で投票する</a></div>`;
 }

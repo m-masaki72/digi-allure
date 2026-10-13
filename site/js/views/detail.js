@@ -4,13 +4,14 @@ import { app, esc, art, toast, detailHref, lineageHref } from "../ui.js";
 
 const OFFICIAL_URL = "https://digimon.net/reference/detail.php?directory_name=";
 const SIMILAR_N = 6;
+const game8URL = (d) => `https://game8.jp/digimonstory-ts/${encodeURIComponent(d.game8_id)}`;
 
 // 外部サイトへのリンク（内容は転載せず、リンクだけ置く）
 function externalLinks(d) {
   const name = encodeURIComponent(d.name);
   return [
     d.official_id && ["公式デジモン図鑑", `${OFFICIAL_URL}${encodeURIComponent(d.official_id)}`],
-    d.game8_id && ["入手方法・進化（Game8）", `https://game8.jp/digimonstory-ts/${encodeURIComponent(d.game8_id)}`],
+    d.game8_id && ["入手方法・進化（Game8）", game8URL(d)],
     ["ピクシブ百科事典", `https://dic.pixiv.net/a/${name}`],
     ["pixiv のイラスト", `https://www.pixiv.net/tags/${name}/artworks`],
     ["X で話題を見る", `https://x.com/search?q=${name}`],
@@ -26,7 +27,7 @@ function tagButtons(tags) {
     .join("")}</div>`).join("");
 }
 
-const rankHTML = (rank) => rank ? `<dt>人気</dt><dd>${rank.rank}位（レート ${Math.round(rank.elo)}・${rank.matches}戦）</dd>` : "";
+const rankHTML = (rank) => rank ? `<dt>人気</dt><dd>通算 ${rank.rank}位（${rank.matches}戦 ${rank.wins}勝）</dd>` : "";
 
 export async function viewDetail(id) {
   const seq = navSeq;
@@ -39,7 +40,13 @@ export async function viewDetail(id) {
   const similar = state.list.filter((s) => s.lineage === d.lineage && s !== d).slice(0, SIMILAR_N);
   app.innerHTML = `
     <div class="detail">
-      <div>${art(d)}</div>
+      <div class="detail-art">
+        ${art(d)}
+        <div class="actions">
+          <a class="btn primary" href="#/vote/${encodeURIComponent(d.id)}">この子で推し診断</a>
+          ${d.game8_id ? `<a class="btn" href="${esc(game8URL(d))}" target="_blank" rel="noopener">入手方法（Game8）</a>` : ""}
+        </div>
+      </div>
       <div>
         <div class="no">タイムストレンジャー図鑑 No.${esc(d.no ?? "—")}</div>
         <h1>${esc(d.name)}</h1>
@@ -56,10 +63,6 @@ export async function viewDetail(id) {
         <h2>ファンタグ</h2>
         <p class="lead">当てはまると思うタグを押してください（もう一度押すと取り消し）。</p>
         <div id="tags"><p class="loading">タグを読み込み中…</p></div>
-        <div class="actions">
-          <a class="btn primary" href="#/vote">推し診断をする</a>
-          <a class="btn" href="#/list">図鑑へ戻る</a>
-        </div>
         <h2>外部サイトで見る</h2>
         <div class="ext-links">${externalLinks(d).map(([label, url]) => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`).join("")}</div>
       </div>

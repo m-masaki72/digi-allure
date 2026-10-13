@@ -116,6 +116,7 @@ input[type=search]:focus, select:focus { border-color: var(--primary); outline: 
 .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); box-shadow: 0 6px 20px rgba(255, 95, 162, .3); }
 .btn.primary:hover { background: var(--primary-hover); }
 .btn:disabled { opacity: .6; cursor: wait; }
+.detail-art .actions { margin-top: 14px; }
 @media (max-width: 720px) { .detail { grid-template-columns: minmax(0, 1fr); gap: 20px; } .detail .art { max-width: 340px; } }
 
 /* ---- 2択投票 ---- */
