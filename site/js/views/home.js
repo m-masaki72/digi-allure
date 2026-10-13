@@ -3,6 +3,7 @@ import { app, esc, art, meta, monthLabel, detailHref, lineageHref, lineageGroups
 import { MY_MIN_VOTES, myVoteCount } from "../mine.js";
 
 const RANK_N = 5;
+const FEW_VOTES = 30; // 今月の票がこれ未満ならランキングより投票の呼びかけを前に出す
 const PICKUP_N = 4;
 
 // 日本時間の日付ごとに決まる「今日の一体」
@@ -43,9 +44,26 @@ function heroHTML(hero, isTop, monthly) {
   </section>`;
 }
 
-function rankHTML(rows) {
-  if (!rows.length) return '<p class="empty">まだ投票がありません。最初の1票をどうぞ！</p>';
-  return `<ol class="ranklist">${rows.slice(0, RANK_N).map((r) => {
+// 目的別の入口（推しを知る／好みの系統から探す／みんなの人気を見る）
+const ENTRIES = [
+  ["#/vote", "推し診断", `2択を${MY_MIN_VOTES}問えらぶだけで、あなたの推しTop5がわかります`, true],
+  ["#/types", "系統から探す", "天使・魔王・妖精…好みの系統や雰囲気から探せます"],
+  ["#/ranking", "人気ランキング", "今月いちばん推されているのはだれ？"],
+];
+const entriesHTML = () => `<nav class="entries" aria-label="目的から選ぶ">${ENTRIES.map(([href, title, text, main]) =>
+  `<a class="entry${main ? " main" : ""}" href="${href}"><span class="name">${title}</span><span class="sub">${text}</span></a>`).join("")}</nav>`;
+
+// 票が少ないうちの順位はあてにならないので、上位3体だけ小さく出して投票を呼びかける
+function rankSectionHTML(rows, votes) {
+  if (votes >= FEW_VOTES) return rankHTML(rows, RANK_N);
+  return `<div class="cta-card">
+    <p><b>今月の人気投票は始まったばかり</b>（いま ${votes} 票）。推し診断の1問が、そのまま1票になります。</p>
+    <a class="btn primary" href="#/vote">推し診断で投票する</a>
+  </div>${rows.length ? rankHTML(rows, 3) : ""}`;
+}
+
+function rankHTML(rows, n) {
+  return `<ol class="ranklist">${rows.slice(0, n).map((r) => {
     const d = state.byId.get(r.id);
     const credit = creditOf(d);
     return `<li><a href="${detailHref(d)}"><span class="pos">${r.rank}</span>${art(d)}<span class="name">${esc(d.name)}</span><span class="sub">${r.wins}勝 / ${r.matches}戦</span>${credit ? `<span class="credit-line">${esc(credit)}</span>` : ""}</a></li>`;
@@ -84,12 +102,15 @@ export async function viewHome() {
   }
   const render = (monthly, ranking) => {
     const rows = publicRanking(monthly);
-    const hero = rows.length ? state.byId.get(rows[0].id) : todaysPick();
+    const votes = Math.round(rows.reduce((s, r) => s + r.matches, 0) / 2);
+    const isTop = rows.length > 0 && votes >= FEW_VOTES;
+    const hero = isTop ? state.byId.get(rows[0].id) : todaysPick();
     app.innerHTML = `
-      ${heroHTML(hero, rows.length > 0, monthly)}
+      ${heroHTML(hero, isTop, monthly)}
+      ${entriesHTML()}
       <section>
         <h2>${monthly ? `${esc(monthLabel(monthly.current))}の人気投票` : "人気投票"}</h2>
-        ${monthly ? rankHTML(rows) : '<p class="empty">ランキングを読み込めませんでした</p>'}
+        ${monthly ? rankSectionHTML(rows, votes) : '<p class="empty">ランキングを読み込めませんでした</p>'}
         <div class="more"><a href="#/ranking">ランキングをすべて見る →</a></div>
       </section>
       <section>

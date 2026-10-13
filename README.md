@@ -8,6 +8,7 @@
 |---|---|
 | `data/digimon_ts_master.csv` | 判定用マスター（タイムストレンジャー登場 465 件） |
 | `tools/judge.html` | 掲載判定ツール。ブラウザで直接開く |
+| `tools/og.html` | OGP 画像 `site/og.png` の元（Chrome で 1200x630 に撮る。公式画像は使わない） |
 | `scripts/build_data.py` | マスター → `site/data/*.json`・`db/seed.sql` を生成 |
 | `scripts/set_status.py` | 図鑑No.指定で `status` を書き換える |
 | `scripts/oneoff/fetch_official_index.py` | 公式図鑑一覧の「名前 ↔ directory_name」だけを取得（`work/` に出力、Git 管理外） |
@@ -22,7 +23,7 @@ Cloudflare Pages（`site/`）＋ Pages Functions（`functions/api/`）＋ D1。
 
 | 画面 | 内容 |
 |---|---|
-| `#/` | トップ（今月1位または今日の一体、人気投票Top5、ピックアップ、系統タイル） |
+| `#/` | トップ（今月1位または今日の一体、目的別の入口（推し診断・系統・ランキング）、人気投票（今月30票未満は投票の呼びかけと上位3体）、ピックアップ、系統タイル） |
 | `#/list`, `#/list/{系統}` | 図鑑一覧（系統・世代・公式タイプ・ファンタグで絞り込み、図鑑No.順／人気順）。ヘッダーの検索窓もここを開く |
 | `#/d/{id}` | 詳細（事実情報・管理人コメント・ファンタグ付け・外部リンク（公式図鑑・Game8・pixiv・X）・同じ系統の子） |
 | `#/my` | 推し診断の結果（自分の票をブラウザの localStorage にだけ記録し、10票以上で Elo 順に1位とTop5を表示。X でシェア可） |

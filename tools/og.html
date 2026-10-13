@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- OGP 画像 site/og.png の元。Chrome で 1200x630 に撮って作り直す: chrome --headless=new --window-size=1200,630 --screenshot=site/og.png tools/og.html -->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif; color: #f5eff9;
+    background:
+      radial-gradient(ellipse 60% 70% at 12% 0%, rgba(255, 95, 162, .38), transparent 70%),
+      radial-gradient(ellipse 55% 60% at 100% 100%, rgba(126, 224, 255, .20), transparent 70%),
+      #0f0b16;
+    display: grid; align-content: center; padding: 0 96px; box-sizing: border-box;
+  }
+  .ring { position: absolute; right: -120px; top: 60px; width: 560px; height: 560px; border-radius: 50%;
+    border: 2px solid rgba(255, 95, 162, .35); box-shadow: 0 0 0 40px rgba(255, 95, 162, .05), 0 0 0 90px rgba(126, 224, 255, .04); }
+  .ring::after { content: ""; position: absolute; inset: 90px; border-radius: 50%; border: 1px dashed rgba(126, 224, 255, .35); }
+  .tag { display: inline-block; width: fit-content; padding: 6px 22px; border-radius: 999px; background: rgba(255, 95, 162, .18); color: #ff5fa2; font-size: 26px; font-weight: 700; }
+  h1 { margin: 22px 0 6px; font-size: 112px; font-weight: 900; letter-spacing: .04em; line-height: 1.1; }
+  h1 span { color: #ff5fa2; }
+  .sub { font-size: 38px; font-weight: 700; color: #cbbfdc; }
+  .catch { margin-top: 44px; font-size: 40px; font-weight: 800; }
+  .catch b { color: #ff5fa2; }
+  .foot { position: absolute; left: 96px; bottom: 44px; font-size: 22px; color: #9a8daf; }
+</style>
+</head>
+<body>
+  <div class="ring"></div>
+  <div class="tag">非公式ファン図鑑</div>
+  <h1><span>デ</span>ジアリュール</h1>
+  <div class="sub">選ばれし魅惑のデジモン図鑑</div>
+  <div class="catch">天使か、魔王か。<b>10問の推し診断</b>で、あなたの推しがわかる。</div>
+  <div class="foot">digi-allure.pages.dev</div>
+</body>
+</html>
