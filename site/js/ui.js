@@ -22,7 +22,7 @@ export const creditOf = (d) => (d.image_url && d.image_source !== "none" && IMAG
 export function art(d) {
   if (d.image_url && d.image_source !== "none") {
     const credit = creditOf(d);
-    return `<div class="art" data-attr="${esc(d.attribute)}" data-id="${esc(d.id)}"><img src="${esc(d.image_url)}" alt="${esc(d.name)}" loading="lazy">${credit ? `<span class="credit">${esc(credit)}</span>` : ""}</div>`;
+    return `<div class="art" data-attr="${esc(d.attribute)}" data-id="${esc(d.id)}" data-src="${esc(d.image_source ?? "")}"><img src="${esc(d.image_url)}" alt="${esc(d.name)}" loading="lazy">${credit ? `<span class="credit">${esc(credit)}</span>` : ""}</div>`;
   }
   return `<div class="art" data-attr="${esc(d.attribute)}" aria-hidden="true">${glyphHTML(d.name, d.level)}</div>`;
 }
