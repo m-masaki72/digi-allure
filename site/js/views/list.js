@@ -68,8 +68,8 @@ export function viewList(lineage) {
   const levels = LEVEL_ORDER.filter((l) => state.list.some((d) => d.level === l));
   const types = [...new Set(state.list.map((d) => d.type))].sort((a, b) => a.localeCompare(b, "ja"));
   app.innerHTML = `
-    <h1>お色気デジモン図鑑</h1>
-    <p class="lead">管理人が「お色気枠」と認定したデジモンだけを集めた非公式図鑑です。気になる子を見つけたら、詳細ページでタグを付けたり2択投票で推してください。</p>
+    <h1>魅惑のデジモン図鑑</h1>
+    <p class="lead">管理人が「魅惑枠」に選んだデジモンだけを集めた非公式図鑑です。気になる子を見つけたら、詳細ページでタグを付けたり2択投票で推してください。</p>
     <div id="banner"></div>
     <div class="filters">
       <div class="row">

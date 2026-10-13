@@ -1,4 +1,4 @@
-# digi-allure（お色気デジモン図鑑）
+# digi-allure（デジアリュール — 選ばれし魅惑のデジモン図鑑）
 
 非公式ファンサイト。方針・スキーマ・ロードマップは [docs/HANDOVER.md](docs/HANDOVER.md) を参照。
 

@@ -12,7 +12,7 @@ export async function viewRequest() {
   const byName = new Map(state.candidates.map((c) => [c.name, c]));
   app.innerHTML = `
     <h1>掲載リクエスト</h1>
-    <p class="lead">「この子もお色気枠では？」というデジモンを推薦してください。管理人が参考にして掲載を検討します（タイムストレンジャー登場デジモンのみ）。</p>
+    <p class="lead">「この子も魅惑枠では？」というデジモンを推薦してください。管理人が参考にして掲載を検討します（タイムストレンジャー登場デジモンのみ）。</p>
     <form class="request-form" id="reqform">
       <label for="reqname">デジモン</label>
       <input id="reqname" list="reqlist" placeholder="名前を入力して候補から選択" autocomplete="off" required>

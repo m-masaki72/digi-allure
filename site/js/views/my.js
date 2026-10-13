@@ -10,7 +10,7 @@ function podiumHTML(list) {
 
 function shareURL(top) {
   const url = `${SITE_URL}#/top5/${top.map((d) => encodeURIComponent(d.id)).join(",")}`;
-  const text = `わたしの推しお色気デジモンTop5\n${top.map((d, i) => `${i + 1}. ${d.name}`).join("\n")}\n#デジアリュール`;
+  const text = `わたしの推し魅惑デジモンTop5\n${top.map((d, i) => `${i + 1}. ${d.name}`).join("\n")}\n#デジアリュール`;
   return { url, intent: `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}` };
 }
 
@@ -69,7 +69,7 @@ export function viewSharedTop(arg) {
   document.title = "推しTop5 — デジアリュール";
   app.innerHTML = top.length ? `
     <h1>だれかの推しTop5</h1>
-    <p class="lead">2択投票でえらばれた、だれかの推しお色気デジモンです。</p>
+    <p class="lead">2択投票でえらばれた、だれかの推し魅惑デジモンです。</p>
     ${podiumHTML(top)}
     <div class="actions"><a class="btn primary" href="#/vote">あなたのTop5も作る</a><a class="btn" href="#/">トップへ</a></div>`
     : '<p class="empty">このTop5は表示できません。<a href="#/vote">あなたのTop5を作る</a></p>';

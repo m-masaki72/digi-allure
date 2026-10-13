@@ -14,7 +14,7 @@ import { viewMy, viewSharedTop } from "./views/my.js";
 async function route() {
   const seq = beginNav();
   stopVoteKeys();
-  document.title = "デジアリュール — お色気デジモン図鑑（非公式）";
+  document.title = "デジアリュール — 選ばれし魅惑のデジモン図鑑（非公式）";
   const hash = location.hash.replace(/^#/, "") || "/";
   const [, page, arg] = hash.split("/");
   const nav = { list: "list", d: "list", vote: "vote", ranking: "ranking", types: "types", my: "my", top5: "my" }[page ?? ""] ?? "";

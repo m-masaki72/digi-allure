@@ -33,6 +33,7 @@ function heroHTML(hero, isTop, monthly) {
       <div class="hero-label">${isTop ? `${esc(monthLabel(monthly.current))}の人気投票 現在1位` : "今日の一体"}</div>
       <div class="hero-name">${esc(hero.name)}</div>
       <div class="meta">${meta(hero)}</div>
+      <p class="catch">天使か、魔王か。選ぶのはテイマーのあなた。</p>
       <p>どっちが好み？を選ぶだけ。2択を重ねると、みんなのランキングと<b>あなただけのTop5</b>ができあがります。</p>
       <div class="actions">
         <a class="btn primary" href="#/vote">2択投票をはじめる</a>
@@ -103,7 +104,7 @@ export async function viewHome() {
       </section>
       <section>
         <h2>図鑑</h2>
-        <p class="lead">管理人が「お色気枠」と認定したデジモン ${state.list.length} 体を掲載しています。</p>
+        <p class="lead">管理人が「魅惑枠」に選んだデジモン ${state.list.length} 体を掲載しています。</p>
         <div class="actions"><a class="btn primary" href="#/list">図鑑を見る（全 ${state.list.length} 体）</a></div>
       </section>`;
   };
