@@ -1,6 +1,6 @@
 """マスターCSVから公開用データを生成する。
 
-- site/data/digimon.json : 公開サイト用（status=approved のみ）
+- site/data/digimon.json : 公開サイト用（status=approved のみ。系統 lineage と Game8 の記事ID を含む）
 - site/data/candidates.json : リクエスト画面用（未掲載の名前と世代のみ）
 - db/seed.sql            : D1 投入用（全件。公開判定は API 側で status を見る）
 
@@ -25,6 +25,19 @@ TAGS = [
     ("デザイン", ["露出度高め", "脚線美", "ボディライン", "仮面・目隠し", "ケモ耳", "翼", "和装・巫女"]),
     ("モチーフ", ["天使", "悪魔・堕天使", "魔女", "妖精・植物", "女神", "獣人"]),
 ]
+# 系統（「系統から探す」の入口）。公式タイプより粗い分類で、CSV の lineage 列があればそちらを優先する
+LINEAGES = [
+    ("天使・聖獣", ["天使型", "大天使型", "座天使型", "聖獣型", "聖竜型"]),
+    ("魔王・堕天使", ["魔王型", "堕天使型", "魔獣型"]),
+    ("女神・神人", ["神人型", "戦士型"]),
+    ("魔女・魔人", ["魔人型"]),
+    ("妖精・花", ["妖精型", "植物型", "昆虫型", "水棲型"]),
+    ("獣人・ケモノ", ["獣人型", "妖獣型", "鳥人型"]),
+    ("ちびっこ・マスコット", ["哺乳類型", "獣型", "ヒナ鳥型", "鳥型", "パペット型"]),
+]
+LINEAGE_OF_TYPE = {t: name for name, types in LINEAGES for t in types}
+LINEAGE_NAMES = {name for name, _ in LINEAGES}
+OTHER_LINEAGE = "その他"
 # Game8 表記 → 公式表記
 ATTRIBUTE_MAP = {"アンノウン": "不明"}
 # 公式図鑑の画像を直リンク表示する（保存はしない）。権利者から求められたら False にして再ビルド・再デプロイ
@@ -75,6 +88,8 @@ def load():
             "level": r["level"],
             "attribute": ATTRIBUTE_MAP.get(r["attribute"], r["attribute"]),
             "type": r["official_type"],
+            "lineage": (r.get("lineage") or "").strip() or LINEAGE_OF_TYPE.get(r["official_type"], OTHER_LINEAGE),
+            "game8_id": r["game8_id"] or None,
             "status": r["status"],
             "blurb": r.get("my_blurb") or None,
             "image_url": image_url,
@@ -89,6 +104,11 @@ def main():
         {k: v for k, v in d.items() if k != "status"}
         for d in items if d["status"] == "approved"
     ]
+    for d in public:
+        if d["lineage"] == OTHER_LINEAGE:
+            print(f"警告: 系統が決まりません（LINEAGES に公式タイプを足すか lineage 列を埋める）: {d['no']} {d['name']} {d['type']}")
+        elif d["lineage"] not in LINEAGE_NAMES:
+            print(f"警告: lineage 列の値が LINEAGES にありません（表記ゆれ？）: {d['no']} {d['name']} {d['lineage']}")
     write_atomic(JSON_OUT, json.dumps(public, ensure_ascii=False, indent=1) + "\n")
     # リクエスト画面用：未掲載のデジモン（ID・名前・世代だけ）。幼年期は掲載対象外
     candidates = [

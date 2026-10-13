@@ -50,7 +50,7 @@
 | `directory_name` | 公式図鑑の ID。**全件空欄、要入力** |
 | `status` | `candidate` / `approved` / `excluded`。現在は全件 `candidate` |
 | `note` | 要確認事項 |
-| `game8_id` | Game8 の個別ページID（`https://game8.jp/digimonstory-ts/{game8_id}`）。判定作業用で、公開には使わない |
+| `game8_id` | Game8 の個別ページID（`https://game8.jp/digimonstory-ts/{game8_id}`）。判定作業用。公開 JSON には詳細ページの「入手方法・進化（Game8）」リンク用にだけ入れる（Game8 のデータ・文章は載せない） |
 
 ### 既知の欠落・要確認
 

@@ -9,7 +9,7 @@ export const state = {
   ranking: null,   // Map(id -> { rank, elo, matches, wins }) 通算
   monthly: null,   // 今月の人気投票（バナー用）
   candidates: null, // 未掲載デジモン（リクエスト用）
-  filters: { q: "", levels: new Set(), type: "", tag: "", sort: "no" },
+  filters: { q: "", levels: new Set(), lineage: "", type: "", tag: "", sort: "no" },
 };
 // import 側からは代入できない（読み取りはライブバインディングで常に最新値）ので、進めるのは beginNav() だけ
 export let navSeq = 0;
@@ -31,6 +31,8 @@ export const tagLabels = () => indexTags().labels;
 export const tagCounts = (id) => indexTags().byId.get(id) ?? [];
 
 export const withRank = (ranking) => ranking.map((r, i) => ({ ...r, rank: i + 1 }));
+// 月間ランキングのうち公開中の子だけ（API は対戦0の子を返さない）
+export const publicRanking = (monthly) => withRank(monthly?.ranking ?? []).filter((r) => state.byId.has(r.id));
 export const setRanking = (ranking) => (state.ranking = new Map(withRank(ranking).map((r) => [r.id, r])));
 
 export async function loadRanking(force = false) {

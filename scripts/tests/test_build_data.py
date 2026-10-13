@@ -102,6 +102,34 @@ class BuildDataTest(unittest.TestCase):
             {"id": "c", "name": "Excluded", "level": "成熟期"},
         ])
 
+    def test_lineage_from_official_type_and_csv_override(self):
+        typed = lambda r, t: {**r, "official_type": t}
+        rows = [
+            typed(row("1", "Angel", "a", status="approved"), "大天使型"),
+            {**typed(row("2", "Override", "b", status="approved"), "大天使型"), "lineage": "魔女・魔人"},
+            typed(row("3", "Unknown", "c", status="approved"), "謎型"),
+            {**typed(row("4", "Typo", "d", status="approved"), "大天使型"), "lineage": "天使･聖獣"},
+        ]
+        with open(self.paths["MASTER"], "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=FIELDS + ["lineage"], lineterminator="\n")
+            w.writeheader()
+            w.writerows(rows)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            build_data.main()
+        public = {d["name"]: d for d in self.read_json("JSON_OUT")}
+        self.assertEqual(public["Angel"]["lineage"], "天使・聖獣")
+        self.assertEqual(public["Override"]["lineage"], "魔女・魔人")
+        self.assertEqual(public["Unknown"]["lineage"], build_data.OTHER_LINEAGE)
+        self.assertIn("謎型", out.getvalue())
+        self.assertIn("天使･聖獣", out.getvalue())  # 表記ゆれは警告する
+        self.assertNotIn("Override", out.getvalue())
+        self.assertEqual(public["Angel"]["game8_id"], "g1")
+
+    def test_lineage_column_is_optional(self):
+        self.build([{**row("1", "A", "a", status="approved"), "official_type": "魔王型"}])
+        self.assertEqual(self.read_json("JSON_OUT")[0]["lineage"], "魔王・堕天使")
+
 
 if __name__ == "__main__":
     unittest.main()

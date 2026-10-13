@@ -1,10 +1,18 @@
 import { api } from "../api.js";
 import { SCOPE, state, navSeq } from "../state.js";
 import { app, esc, art, meta, toast } from "../ui.js";
+import { MY_MIN_VOTES, myVoteCount, recordMyVote } from "../mine.js";
 
 // ---------- 2択投票 ----------
 let voteKeyHandler = null;
-let votedCount = 0;
+
+const knows = (id) => state.byId.has(id);
+
+function myProgressHTML(n = myVoteCount(knows)) {
+  return n < MY_MIN_VOTES
+    ? `あなたのTop5まで あと ${MY_MIN_VOTES - n} 票`
+    : `<a href="#/my">あなたのTop5を見る（${n} 票）</a>`;
+}
 
 export function stopVoteKeys() {
   if (voteKeyHandler) {
@@ -22,7 +30,7 @@ export async function viewVote() {
     <div class="vote-foot">
       <button id="skip">どちらとも言えない（スキップ）</button>
       <a href="#/ranking">ランキングを見る</a>
-      <div id="voted">${votedCount ? `この訪問で ${votedCount} 票投じました` : ""}</div>
+      <div id="voted">${myProgressHTML()}</div>
     </div>`;
   let pair = null;
   let busy = false;
@@ -58,12 +66,13 @@ export async function viewVote() {
     btns.forEach((b) => { b.disabled = true; b.classList.toggle("win", b.dataset.side === side); });
     try {
       const res = await api("/api/vote", { method: "POST", body: JSON.stringify({ ...pair, winner }) });
-      if (seq !== navSeq) return;
-      votedCount++;
-      document.getElementById("voted").textContent = `この訪問で ${votedCount} 票投じました`;
-      toast(`${state.byId.get(winner).name} に投票しました（+${res.delta.toFixed(1)}）`);
+      // 票はサーバーに入ったので、画面を移っていても自分の記録とキャッシュの破棄はやる
+      const votes = recordMyVote(winner, pair[side === "a" ? "b" : "a"]);
       state.ranking = null;
       state.monthly = null;
+      if (seq !== navSeq) return;
+      document.getElementById("voted").innerHTML = myProgressHTML(myVoteCount(knows, votes)); // 数値と固定文言だけ
+      toast(`${state.byId.get(winner).name} に投票しました（+${res.delta.toFixed(1)}）`);
     } catch (e) {
       if (seq !== navSeq) return;
       if (e.status === 409) toast("この組み合わせは今日すでに投票済みです。次の対戦へ進みます");

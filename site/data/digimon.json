@@ -8,6 +8,8 @@
   "level": "成長期",
   "attribute": "ワクチン",
   "type": "獣型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725334",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/terriermon.jpg",
   "image_source": "official_link"
@@ -21,6 +23,8 @@
   "level": "成長期",
   "attribute": "ワクチン",
   "type": "ヒナ鳥型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725339",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/piyomon.jpg",
   "image_source": "official_link"
@@ -34,6 +38,8 @@
   "level": "成長期",
   "attribute": "ワクチン",
   "type": "哺乳類型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725484",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/plotmon.jpg",
   "image_source": "official_link"
@@ -47,6 +53,8 @@
   "level": "成長期",
   "attribute": "ワクチン",
   "type": "鳥型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725341",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/penmon.jpg",
   "image_source": "official_link"
@@ -60,6 +68,8 @@
   "level": "成長期",
   "attribute": "ワクチン",
   "type": "天使型",
+  "lineage": "天使・聖獣",
+  "game8_id": "725345",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/lucemon.jpg",
   "image_source": "official_link"
@@ -73,6 +83,8 @@
   "level": "成長期",
   "attribute": "データ",
   "type": "哺乳類型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725356",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/patamon.jpg",
   "image_source": "official_link"
@@ -86,6 +98,8 @@
   "level": "成長期",
   "attribute": "データ",
   "type": "植物型",
+  "lineage": "妖精・花",
+  "game8_id": "725359",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/palmon.jpg",
   "image_source": "official_link"
@@ -99,6 +113,8 @@
   "level": "成長期",
   "attribute": "データ",
   "type": "植物型",
+  "lineage": "妖精・花",
+  "game8_id": "725360",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/floramon.jpg",
   "image_source": "official_link"
@@ -112,6 +128,8 @@
   "level": "成長期",
   "attribute": "データ",
   "type": "哺乳類型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725483",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/lunamon.jpg",
   "image_source": "official_link"
@@ -125,6 +143,8 @@
   "level": "成長期",
   "attribute": "データ",
   "type": "獣人型",
+  "lineage": "獣人・ケモノ",
+  "game8_id": "725203",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/renamon.jpg",
   "image_source": "official_link"
@@ -138,6 +158,8 @@
   "level": "成長期",
   "attribute": "データ",
   "type": "獣型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725363",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/lopmon.jpg",
   "image_source": "official_link"
@@ -151,6 +173,8 @@
   "level": "成熟期",
   "attribute": "ワクチン",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725385",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/aegiomon.jpg",
   "image_source": "official_link"
@@ -164,6 +188,8 @@
   "level": "成熟期",
   "attribute": "ワクチン",
   "type": "獣人型",
+  "lineage": "獣人・ケモノ",
+  "game8_id": "725390",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/galgomon.jpg",
   "image_source": "official_link"
@@ -177,6 +203,8 @@
   "level": "成熟期",
   "attribute": "ワクチン",
   "type": "聖獣型",
+  "lineage": "天使・聖獣",
+  "game8_id": "725401",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/tailmon.jpg",
   "image_source": "official_link"
@@ -190,6 +218,8 @@
   "level": "成熟期",
   "attribute": "データ",
   "type": "魔人型",
+  "lineage": "魔女・魔人",
+  "game8_id": "725416",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/witchmon.jpg",
   "image_source": "official_link"
@@ -203,6 +233,8 @@
   "level": "成熟期",
   "attribute": "データ",
   "type": "妖獣型",
+  "lineage": "獣人・ケモノ",
+  "game8_id": "725420",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/kyubimon.jpg",
   "image_source": "official_link"
@@ -216,6 +248,8 @@
   "level": "成熟期",
   "attribute": "データ",
   "type": "植物型",
+  "lineage": "妖精・花",
+  "game8_id": "725423",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/sunflowmon.jpg",
   "image_source": "official_link"
@@ -229,6 +263,8 @@
   "level": "成熟期",
   "attribute": "データ",
   "type": "獣人型",
+  "lineage": "獣人・ケモノ",
+  "game8_id": "725440",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/lekismon.jpg",
   "image_source": "official_link"
@@ -242,6 +278,8 @@
   "level": "成熟期",
   "attribute": "ウィルス",
   "type": "魔獣型",
+  "lineage": "魔王・堕天使",
+  "game8_id": "725468",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/blacktailmon.jpg",
   "image_source": "official_link"
@@ -255,6 +293,8 @@
   "level": "アーマー体",
   "attribute": "フリー",
   "type": "聖獣型",
+  "lineage": "天使・聖獣",
+  "game8_id": "726807",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/nefertimon.jpg",
   "image_source": "official_link"
@@ -268,6 +308,8 @@
   "level": "ハイブリッド体",
   "attribute": "ヴァリアブル",
   "type": "妖精型",
+  "lineage": "妖精・花",
+  "game8_id": "725743",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/ranamon.jpg",
   "image_source": "official_link"
@@ -281,6 +323,8 @@
   "level": "ハイブリッド体",
   "attribute": "ヴァリアブル",
   "type": "水棲型",
+  "lineage": "妖精・花",
+  "game8_id": "725742",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/calamaramon.jpg",
   "image_source": "official_link"
@@ -294,6 +338,8 @@
   "level": "完全体",
   "attribute": "ワクチン",
   "type": "パペット型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725733",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/ex-tyranomon.jpg",
   "image_source": "official_link"
@@ -307,6 +353,8 @@
   "level": "完全体",
   "attribute": "ワクチン",
   "type": "大天使型",
+  "lineage": "天使・聖獣",
+  "game8_id": "725732",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/angewomon.jpg",
   "image_source": "official_link"
@@ -320,6 +368,8 @@
   "level": "完全体",
   "attribute": "ワクチン",
   "type": "鳥人型",
+  "lineage": "獣人・ケモノ",
+  "game8_id": "725731",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/garudamon.jpg",
   "image_source": "official_link"
@@ -333,6 +383,8 @@
   "level": "完全体",
   "attribute": "ワクチン",
   "type": "昆虫型",
+  "lineage": "妖精・花",
+  "game8_id": "725724",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/jewelbeemon.jpg",
   "image_source": "official_link"
@@ -346,6 +398,8 @@
   "level": "完全体",
   "attribute": "ワクチン",
   "type": "パペット型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "726814",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/monzaemon.jpg",
   "image_source": "official_link"
@@ -359,6 +413,8 @@
   "level": "完全体",
   "attribute": "データ",
   "type": "聖獣型",
+  "lineage": "天使・聖獣",
+  "game8_id": "725704",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/andiramon_2.jpg",
   "image_source": "official_link"
@@ -372,6 +428,8 @@
   "level": "完全体",
   "attribute": "データ",
   "type": "魔人型",
+  "lineage": "魔女・魔人",
+  "game8_id": "725699",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/crescemon.jpg",
   "image_source": "official_link"
@@ -385,6 +443,8 @@
   "level": "完全体",
   "attribute": "データ",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725695",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/sirenmon.jpg",
   "image_source": "official_link"
@@ -398,6 +458,8 @@
   "level": "完全体",
   "attribute": "データ",
   "type": "魔人型",
+  "lineage": "魔女・魔人",
+  "game8_id": "725694",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/taomon.jpg",
   "image_source": "official_link"
@@ -411,6 +473,8 @@
   "level": "完全体",
   "attribute": "データ",
   "type": "パペット型",
+  "lineage": "ちびっこ・マスコット",
+  "game8_id": "725686",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/pandamon.jpg",
   "image_source": "official_link"
@@ -424,6 +488,8 @@
   "level": "完全体",
   "attribute": "データ",
   "type": "妖精型",
+  "lineage": "妖精・花",
+  "game8_id": "725675",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/lilamon.jpg",
   "image_source": "official_link"
@@ -437,6 +503,8 @@
   "level": "完全体",
   "attribute": "データ",
   "type": "妖精型",
+  "lineage": "妖精・花",
+  "game8_id": "725674",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/lilimon.jpg",
   "image_source": "official_link"
@@ -450,6 +518,8 @@
   "level": "完全体",
   "attribute": "ウィルス",
   "type": "魔獣型",
+  "lineage": "魔王・堕天使",
+  "game8_id": "725671",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/archnemon.jpg",
   "image_source": "official_link"
@@ -463,6 +533,8 @@
   "level": "完全体",
   "attribute": "ウィルス",
   "type": "魔王型",
+  "lineage": "魔王・堕天使",
+  "game8_id": "726816",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/rucemonfalldownmode.jpg",
   "image_source": "official_link"
@@ -476,6 +548,8 @@
   "level": "完全体",
   "attribute": "ウィルス",
   "type": "堕天使型",
+  "lineage": "魔王・堕天使",
+  "game8_id": "725641",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/ladydevimon.jpg",
   "image_source": "official_link"
@@ -489,6 +563,8 @@
   "level": "完全体",
   "attribute": "フリー",
   "type": "獣人型",
+  "lineage": "獣人・ケモノ",
+  "game8_id": "726818",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/silphymon.jpg",
   "image_source": "official_link"
@@ -502,6 +578,8 @@
   "level": "究極体",
   "attribute": "ワクチン",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725633",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/venusmon.jpg",
   "image_source": "official_link"
@@ -515,6 +593,8 @@
   "level": "究極体",
   "attribute": "ワクチン",
   "type": "座天使型",
+  "lineage": "天使・聖獣",
+  "game8_id": "725630",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/ofanimon.jpg",
   "image_source": "official_link"
@@ -528,6 +608,8 @@
   "level": "究極体",
   "attribute": "ワクチン",
   "type": "聖竜型",
+  "lineage": "天使・聖獣",
+  "game8_id": "725609",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/holydramon.jpg",
   "image_source": "official_link"
@@ -541,6 +623,8 @@
   "level": "究極体",
   "attribute": "ワクチン",
   "type": "天使型",
+  "lineage": "天使・聖獣",
+  "game8_id": "726824",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/mastemon.jpg",
   "image_source": "official_link"
@@ -554,6 +638,8 @@
   "level": "究極体",
   "attribute": "ワクチン",
   "type": "妖精型",
+  "lineage": "妖精・花",
+  "game8_id": "725608",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/marinangemon.jpg",
   "image_source": "official_link"
@@ -567,6 +653,8 @@
   "level": "究極体",
   "attribute": "データ",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725602",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/kuzuhamon.jpg",
   "image_source": "official_link"
@@ -580,6 +668,8 @@
   "level": "究極体",
   "attribute": "データ",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725599",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/ceresmon.jpg",
   "image_source": "official_link"
@@ -593,6 +683,8 @@
   "level": "究極体",
   "attribute": "データ",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725598",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/ceresmon.jpg",
   "image_source": "official_link"
@@ -606,6 +698,8 @@
   "level": "究極体",
   "attribute": "データ",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725596",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/sakuyamon.jpg",
   "image_source": "official_link"
@@ -619,6 +713,8 @@
   "level": "究極体",
   "attribute": "データ",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725593",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/dianamon.jpg",
   "image_source": "official_link"
@@ -632,6 +728,8 @@
   "level": "究極体",
   "attribute": "データ",
   "type": "妖精型",
+  "lineage": "妖精・花",
+  "game8_id": "725582",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/rosemon.jpg",
   "image_source": "official_link"
@@ -645,6 +743,8 @@
   "level": "究極体",
   "attribute": "データ",
   "type": "妖精型",
+  "lineage": "妖精・花",
+  "game8_id": "725581",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/lotusmon.jpg",
   "image_source": "official_link"
@@ -658,6 +758,8 @@
   "level": "究極体",
   "attribute": "ウィルス",
   "type": "魔人型",
+  "lineage": "魔女・魔人",
+  "game8_id": "726830",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/beelstarmon.jpg",
   "image_source": "official_link"
@@ -671,6 +773,8 @@
   "level": "究極体",
   "attribute": "ウィルス",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "725548",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/minervamon.jpg",
   "image_source": "official_link"
@@ -684,6 +788,8 @@
   "level": "究極体",
   "attribute": "ウィルス",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "726832",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/junomon.jpg",
   "image_source": "official_link"
@@ -697,6 +803,8 @@
   "level": "究極体",
   "attribute": "ウィルス",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "726833",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/junomon_hysteric.jpg",
   "image_source": "official_link"
@@ -710,6 +818,8 @@
   "level": "究極体",
   "attribute": "ウィルス",
   "type": "魔王型",
+  "lineage": "魔王・堕天使",
+  "game8_id": "725541",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/lilithmon.jpg",
   "image_source": "official_link"
@@ -723,6 +833,8 @@
   "level": "究極体",
   "attribute": "フリー",
   "type": "戦士型",
+  "lineage": "女神・神人",
+  "game8_id": "725538",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/valkyrimon.jpg",
   "image_source": "official_link"
@@ -736,6 +848,8 @@
   "level": "超究極体",
   "attribute": "データ",
   "type": "妖精型",
+  "lineage": "妖精・花",
+  "game8_id": "726854",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/rosemonburstmode.jpg",
   "image_source": "official_link"
@@ -749,6 +863,8 @@
   "level": "超究極体",
   "attribute": "ウィルス",
   "type": "神人型",
+  "lineage": "女神・神人",
+  "game8_id": "726871",
   "blurb": null,
   "image_url": "https://digimon.net/cimages/digimon/mervamon.jpg",
   "image_source": "official_link"

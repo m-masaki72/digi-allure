@@ -1,26 +1,23 @@
-import { state, navSeq, tagCounts, loadRanking, loadMonthly, loadTags } from "../state.js";
-import { app, esc, art, monthLabel, detailHref } from "../ui.js";
+import { state, navSeq, tagCounts, loadRanking, loadMonthly, loadTags, publicRanking } from "../state.js";
+import { app, esc, cardHTML, monthLabel, lineageHref, lineageGroups } from "../ui.js";
 
 const LEVEL_ORDER = ["成長期", "成熟期", "完全体", "究極体", "超究極体", "アーマー体", "ハイブリッド体"];
 
 // ---------- 図鑑一覧 ----------
-function cardHTML(d) {
+function listCardHTML(d) {
   const tags = tagCounts(d.id).slice(0, 2);
-  return `<a class="card" href="${detailHref(d)}">
-    ${art(d)}
-    <div class="body">
+  return cardHTML(d, `
       <div class="no">No.${esc(d.no ?? "—")}</div>
       <div class="name">${esc(d.name)}</div>
       <div class="meta">${esc(d.type)}</div>
-      ${tags.length ? `<div class="tags">${tags.map((t) => `<span class="mini-tag">${esc(t.label)}</span>`).join("")}</div>` : ""}
-    </div>
-  </a>`;
+      ${tags.length ? `<div class="tags">${tags.map((t) => `<span class="mini-tag">${esc(t.label)}</span>`).join("")}</div>` : ""}`);
 }
 
 function filtered() {
   const f = state.filters;
   let list = state.list.filter((d) => {
     if (f.levels.size && !f.levels.has(d.level)) return false;
+    if (f.lineage && d.lineage !== f.lineage) return false;
     if (f.type && d.type !== f.type) return false;
     if (f.q && !`${d.name} ${d.type} ${d.attribute}`.includes(f.q)) return false;
     if (f.tag && !tagCounts(d.id).some((t) => String(t.tag_id) === f.tag)) return false;
@@ -35,12 +32,12 @@ function filtered() {
 function renderGrid() {
   const list = filtered();
   document.getElementById("count").textContent = `${list.length} 体`;
-  document.getElementById("grid").innerHTML = list.length ? list.map(cardHTML).join("") : '<p class="empty">該当するデジモンがいません</p>';
+  document.getElementById("grid").innerHTML = list.length ? list.map(listCardHTML).join("") : '<p class="empty">該当するデジモンがいません</p>';
 }
 
 function renderBanner() {
   const m = state.monthly;
-  const top = m?.ranking.find((r) => state.byId.has(r.id));
+  const top = publicRanking(m)[0];
   document.getElementById("banner").innerHTML = m ? `<a class="banner" href="#/ranking">${esc(monthLabel(m.current))}の人気投票 開催中
     <span>${top ? `現在の1位：<b>${esc(state.byId.get(top.id).name)}</b>` : "まだ投票がありません"} ／ 結果を見る →</span></a>` : "";
 }
@@ -60,9 +57,14 @@ function renderTagChips(settled) {
   row.innerHTML = usedTags.length ? `<label>ファンタグ</label>${usedTags.map((t) => `<button class="chip${String(t.id) === f.tag ? " on" : ""}" data-tag="${t.id}">${esc(t.label)}</button>`).join("")}` : "";
 }
 
-export function viewList() {
+// 系統の絞り込みは URL（#/list/系統名）だけが持つ。ほかの絞り込みは state.filters に残す
+export function viewList(lineage) {
   const seq = navSeq;
   const f = state.filters;
+  const lineages = lineageGroups().map(([name]) => name);
+  f.lineage = lineages.includes(lineage) ? lineage : "";
+  // 公式タイプはどれか1つの系統に属すので、系統と食い違うタイプが残っていると必ず0件になる
+  if (f.lineage && f.type && !state.list.some((d) => d.type === f.type && d.lineage === f.lineage)) f.type = "";
   const levels = LEVEL_ORDER.filter((l) => state.list.some((d) => d.level === l));
   const types = [...new Set(state.list.map((d) => d.type))].sort((a, b) => a.localeCompare(b, "ja"));
   app.innerHTML = `
@@ -76,6 +78,7 @@ export function viewList() {
         <select id="sort"></select>
         <span class="count" id="count" role="status"></span>
       </div>
+      <div class="row" id="lineages"><label>系統</label>${lineages.map((l) => `<button class="chip${f.lineage === l ? " on" : ""}" data-lineage="${esc(l)}">${esc(l)}</button>`).join("")}</div>
       <div class="row" id="levels"><label>世代</label>${levels.map((l) => `<button class="chip${f.levels.has(l) ? " on" : ""}" data-level="${esc(l)}">${esc(l)}</button>`).join("")}</div>
       <div class="row" id="tagchips" hidden></div>
     </div>
@@ -87,6 +90,15 @@ export function viewList() {
   document.getElementById("q").addEventListener("input", (e) => { f.q = e.target.value.trim(); renderGrid(); });
   document.getElementById("type").addEventListener("change", (e) => { f.type = e.target.value; renderGrid(); });
   document.getElementById("sort").addEventListener("change", (e) => { f.sort = e.target.value; renderGrid(); });
+  document.getElementById("lineages").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-lineage]");
+    if (!b) return;
+    f.lineage = f.lineage === b.dataset.lineage ? "" : b.dataset.lineage;
+    // 描き直しやスクロールの巻き戻しをさせないよう、hashchange を起こさずに URL だけ合わせる
+    history.replaceState(null, "", f.lineage ? lineageHref(f.lineage) : "#/list");
+    e.currentTarget.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.lineage === f.lineage));
+    renderGrid();
+  });
   document.getElementById("levels").addEventListener("click", (e) => {
     const b = e.target.closest("[data-level]");
     if (!b) return;

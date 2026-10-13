@@ -182,6 +182,55 @@ table.rank a:hover { color: var(--term); }
 .links a { background: var(--card); border: 1px solid var(--line); border-radius: 2px; padding: 1px 10px; text-decoration: none; color: var(--text); font-size: 13px; }
 .links a:hover { color: var(--term); border-color: var(--term); }
 
+/* ---- ヘッダー検索 ---- */
+.site-search { flex: 1 1 180px; max-width: 280px; margin-left: auto; }
+.site-search input { width: 100%; }
+
+/* ---- トップ ---- */
+main section { margin-bottom: 8px; }
+.hero { display: grid; grid-template-columns: minmax(160px, 300px) minmax(0, 1fr); gap: 24px; align-items: center; padding: 18px; background: linear-gradient(120deg, rgba(255, 112, 180, .12), rgba(79, 216, 255, .08)); border: 1px solid #ff70b466; border-radius: var(--radius); }
+.hero-art { display: block; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.hero-label { color: var(--accent); font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.hero-name { font-size: 30px; font-weight: 900; line-height: 1.3; overflow-wrap: anywhere; }
+.hero .meta { color: var(--muted); font-size: 13px; }
+.hero p { margin: 12px 0 0; font-size: 14px; }
+.hero p b { color: var(--accent); }
+.more { text-align: right; margin-top: 8px; font-size: 14px; }
+.ranklist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr)); gap: 10px; }
+.ranklist a { display: grid; grid-template-columns: auto 52px minmax(0, 1fr); grid-template-rows: auto auto auto; column-gap: 10px; align-items: center; padding: 8px 10px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); text-decoration: none; }
+.ranklist a:hover { border-color: var(--term); }
+.ranklist .pos { grid-row: 1 / 4; font-family: var(--mono); font-weight: 900; font-size: 20px; color: var(--term); min-width: 1.4em; text-align: center; }
+.ranklist .art { grid-row: 1 / 4; border-radius: 2px; }
+/* 小さいサムネイルには重ねて出せないので、出典ラベルは行の下に文字で出す */
+.ranklist .art .credit { display: none; }
+.ranklist .credit-line { grid-column: 3; color: var(--muted); font-size: 10px; }
+.lineage .art .credit { white-space: nowrap; font-size: 9px; right: 4px; bottom: 4px; }
+.ranklist .name { font-weight: 700; overflow-wrap: anywhere; }
+.ranklist .sub { color: var(--muted); font-size: 12px; font-family: var(--mono); }
+.lineages { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: 10px; }
+.lineage { display: grid; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; color: var(--text); text-decoration: none; }
+.lineage:hover { border-color: var(--term); }
+.lineage .name { padding: 6px 10px 0; font-weight: 700; font-size: 14px; }
+.lineage .sub { padding: 0 10px 8px; color: var(--muted); font-size: 12px; font-family: var(--mono); }
+@media (max-width: 560px) { .hero { grid-template-columns: minmax(0, 1fr); padding: 14px; } .hero-art { max-width: 240px; } .hero-name { font-size: 24px; } }
+
+/* ---- あなたのTop5 ---- */
+.podium { list-style: none; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.podium li:first-child .card { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 18px rgba(255, 112, 180, .3); }
+.podium .no { color: var(--term); font-weight: 700; }
+@media (max-width: 720px) { .podium { grid-template-columns: repeat(2, minmax(0, 1fr)); } .podium li:first-child { grid-column: 1 / -1; max-width: 260px; } }
+.progress { font-family: var(--mono); color: var(--text); }
+.progress b { color: var(--accent); font-size: 20px; }
+.lead.small { margin-top: 18px; font-size: 12px; }
+.linkish { background: none; border: none; padding: 0; margin-left: 8px; color: var(--accent2); text-decoration: underline; font-size: inherit; }
+
+/* ---- 外部リンク ---- */
+.ext-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.ext-links a { border: 1px solid var(--line); border-radius: 2px; padding: 3px 10px; font-size: 13px; text-decoration: none; }
+.ext-links a::after { content: " ↗"; content: " ↗" / ""; color: var(--muted); }
+.ext-links a:hover { border-color: var(--accent2); }
+
+.footer-links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; }
 .site-footer { border-top: 1px dashed var(--line); margin-top: 40px; padding: 20px; font-size: 12px; color: var(--muted); max-width: 1200px; margin-inline: auto; }
 .site-footer b { color: var(--text); }
 #toast { position: fixed; z-index: 30; left: 50%; max-width: 92vw; text-align: center; bottom: 24px; transform: translateX(-50%) translateY(20px); background: #04120a; color: var(--term); border: 1px solid var(--term); font-family: var(--mono); font-weight: 700; padding: 8px 18px; border-radius: 2px; box-shadow: var(--glow); opacity: 0; transition: .2s; pointer-events: none; }
@@ -190,8 +239,15 @@ table.rank a:hover { color: var(--term); }
 #toast.err { background: #1a0606; color: #ffb0b0; border-color: #ff6b6b; box-shadow: 0 0 6px rgba(255, 107, 107, .45); }
 
 @media (max-width: 560px) {
-  .site-header { padding: 8px 16px; gap: 6px; }
-  nav a { padding: 3px 7px; font-size: 13px; }
+  /* スマホはメインメニューを画面下のタブにする（backdrop-filter があると fixed の基準が header になるので外す） */
+  .site-header { padding: 8px 16px; gap: 6px; flex-wrap: nowrap; backdrop-filter: none; background: rgba(8, 15, 21, .98); }
+  .logo small { display: none; }
+  .site-search { max-width: none; }
+  .main-nav { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding: 0 0 env(safe-area-inset-bottom); background: rgba(8, 15, 21, .98); border-top: 1px solid var(--line); }
+  .main-nav a { padding: 12px 2px; text-align: center; font-size: 12px; border-radius: 0; white-space: nowrap; }
+  .main-nav a::before, .main-nav a.on::before { content: none; }
+  body { padding-bottom: calc(52px + env(safe-area-inset-bottom)); }
+  #toast { bottom: calc(68px + env(safe-area-inset-bottom)); }
   main { padding: 16px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .card .body { padding: 6px 10px 10px; }
