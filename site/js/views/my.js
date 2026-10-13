@@ -1,11 +1,11 @@
 import { state } from "../state.js";
-import { app, esc, cardHTML, detailHref, toast } from "../ui.js";
+import { app, esc, art, meta, cardHTML, detailHref, toast } from "../ui.js";
 import { MY_MIN_VOTES, TOP_N, myRanking, clearMyVotes } from "../mine.js";
 
 const SITE_URL = "https://digi-allure.pages.dev/";
 
-function podiumHTML(list) {
-  return `<ol class="podium">${list.map((d, i) => `<li>${cardHTML(d, `<div class="no">${i + 1}位</div><div class="name">${esc(d.name)}</div>`)}</li>`).join("")}</ol>`;
+function podiumHTML(list, start = 1) {
+  return `<ol class="podium${start > 1 ? " rest" : ""}">${list.map((d, i) => `<li>${cardHTML(d, `<div class="no">${i + start}位</div><div class="name">${esc(d.name)}</div>`)}</li>`).join("")}</ol>`;
 }
 
 function shareURL(top) {
@@ -16,27 +16,40 @@ function shareURL(top) {
 
 // ---------- あなたのTop5 ----------
 export function viewMy() {
-  document.title = "あなたのTop5 — デジアリュール";
+  document.title = "推し診断の結果 — デジアリュール";
   const { votes: n, rows: ranked } = myRanking((id) => state.byId.has(id));
   if (n < MY_MIN_VOTES) {
     app.innerHTML = `
-      <h1>あなたのTop5</h1>
-      <p class="lead">2択投票でえらんだ結果から、あなただけの推しランキングを作ります。投票の記録はこの端末のブラウザにだけ保存されます。</p>
-      <p class="progress">あと <b>${MY_MIN_VOTES - n}</b> 票で Top5 が出ます（いま ${n} 票）</p>
-      <div class="actions"><a class="btn primary" href="#/vote">2択投票をはじめる</a></div>`;
+      <h1>推し診断の結果</h1>
+      <p class="lead">推し診断（2択 ${MY_MIN_VOTES}問）でえらんだ結果から、あなただけの推しTop5を作ります。記録はこの端末のブラウザにだけ保存されます。</p>
+      <p class="progress">あと <b>${MY_MIN_VOTES - n}</b> 問で結果が出ます（いま ${n} 問）</p>
+      <div class="actions"><a class="btn primary" href="#/vote">推し診断をはじめる</a></div>`;
     return;
   }
   const rows = ranked.map((r) => ({ ...r, d: state.byId.get(r.id) }));
   const top = rows.slice(0, TOP_N).map((r) => r.d);
   const share = shareURL(top);
+  const [first, ...rest] = top;
   app.innerHTML = `
-    <h1>あなたのTop5</h1>
-    <p class="lead">あなたの ${n} 票から作った推しランキングです。投票するほど順位が正確になります。</p>
-    ${podiumHTML(top)}
+    <section class="hero result">
+      <a class="hero-art" href="${detailHref(first)}">${art(first)}</a>
+      <div class="hero-body">
+        <div class="hero-label">推し診断の結果</div>
+        <p class="result-lead">あなたの推しNo.1は…</p>
+        <div class="hero-name">${esc(first.name)}</div>
+        <div class="meta">${meta(first)}</div>
+        <div class="actions">
+          <a class="btn primary" href="${esc(share.intent)}" target="_blank" rel="noopener">結果を X でシェア</a>
+          <button class="btn" id="copy">リンクをコピー</button>
+        </div>
+      </div>
+    </section>
+    <h2>2位〜${TOP_N}位</h2>
+    ${podiumHTML(rest, 2)}
+    <p class="lead">あなたの ${n} 票から作った推しランキングです。診断を重ねるほど順位が正確になります。</p>
     <div class="actions">
-      <a class="btn primary" href="${esc(share.intent)}" target="_blank" rel="noopener">X でシェア</a>
-      <button class="btn" id="copy">リンクをコピー</button>
-      <a class="btn" href="#/vote">続けて投票する</a>
+      <a class="btn primary" href="#/vote">もう${MY_MIN_VOTES}問 診断する</a>
+      <a class="btn" href="${detailHref(first)}">${esc(first.name)} をくわしく見る</a>
     </div>
     <h2>あなたの全順位</h2>
     <table class="rank">
@@ -69,8 +82,8 @@ export function viewSharedTop(arg) {
   document.title = "推しTop5 — デジアリュール";
   app.innerHTML = top.length ? `
     <h1>だれかの推しTop5</h1>
-    <p class="lead">2択投票でえらばれた、だれかの推し魅惑デジモンです。</p>
+    <p class="lead">推し診断でえらばれた、だれかの推し魅惑デジモンです。</p>
     ${podiumHTML(top)}
-    <div class="actions"><a class="btn primary" href="#/vote">あなたのTop5も作る</a><a class="btn" href="#/">トップへ</a></div>`
-    : '<p class="empty">このTop5は表示できません。<a href="#/vote">あなたのTop5を作る</a></p>';
+    <div class="actions"><a class="btn primary" href="#/vote">あなたも推し診断する</a><a class="btn" href="#/">トップへ</a></div>`
+    : '<p class="empty">このTop5は表示できません。<a href="#/vote">推し診断をする</a></p>';
 }

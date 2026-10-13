@@ -34,10 +34,10 @@ function heroHTML(hero, isTop, monthly) {
       <div class="hero-name">${esc(hero.name)}</div>
       <div class="meta">${meta(hero)}</div>
       <p class="catch">天使か、魔王か。選ぶのはテイマーのあなた。</p>
-      <p>どっちが好み？を選ぶだけ。2択を重ねると、みんなのランキングと<b>あなただけのTop5</b>ができあがります。</p>
+      <p>「どっちが好み？」を${MY_MIN_VOTES}問えらぶだけで、<b>あなたの推しTop5</b>がわかります。</p>
       <div class="actions">
-        <a class="btn primary" href="#/vote">2択投票をはじめる</a>
-        <a class="btn" href="#/my">${n >= MY_MIN_VOTES ? "あなたのTop5を見る" : `あなたのTop5（あと${MY_MIN_VOTES - n}票）`}</a>
+        <a class="btn primary" href="#/vote">推し診断をはじめる（${MY_MIN_VOTES}問）</a>
+        ${n >= MY_MIN_VOTES ? '<a class="btn" href="#/my">前回の診断結果を見る</a>' : '<a class="btn" href="#/list">図鑑を見る</a>'}
       </div>
     </div>
   </section>`;

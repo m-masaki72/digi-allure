@@ -57,7 +57,7 @@ export async function viewDetail(id) {
         <p class="lead">当てはまると思うタグを押してください（もう一度押すと取り消し）。</p>
         <div id="tags"><p class="loading">タグを読み込み中…</p></div>
         <div class="actions">
-          <a class="btn primary" href="#/vote">2択投票で推す</a>
+          <a class="btn primary" href="#/vote">推し診断をする</a>
           <a class="btn" href="#/list">図鑑へ戻る</a>
         </div>
         <h2>外部サイトで見る</h2>

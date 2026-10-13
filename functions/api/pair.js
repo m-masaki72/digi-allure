@@ -1,12 +1,16 @@
-import { json, fail, scopeOf, signPair, clientIds, dayStart } from "../_lib/api.js";
+import { json, fail, scopeOf, signPair, clientIds, dayStart, choosePair } from "../_lib/api.js";
 
-const pick = (list) => list[Math.floor(Math.random() * list.length)];
+const SEEN_MAX = 20;
 
-// GET /api/pair?scope=time-stranger
+// GET /api/pair?scope=time-stranger[&keep={id}&seen={id},{id}...]
 // 片方は対戦数の少ない個体から、もう片方は全体からランダムに選ぶ。今日このIPで投票済みの組み合わせは出さない
+// keep（推し診断で勝ち残った子）を指定すると、その子を片方に固定して seen にない相手を選ぶ
 export async function onRequestGet({ request, env }) {
-  const scope = scopeOf(new URL(request.url).searchParams.get("scope"));
+  const params = new URL(request.url).searchParams;
+  const scope = scopeOf(params.get("scope"));
   if (!scope) return fail(400, "scope が不正です");
+  const keep = params.get("keep");
+  const seen = (params.get("seen") ?? "").split(",").slice(0, SEEN_MAX);
 
   const { ip } = await clientIds(request, env);
   const base = `SELECT d.id FROM ratings r JOIN digimon d ON d.id = r.digimon_id
@@ -18,15 +22,7 @@ export async function onRequestGet({ request, env }) {
       .bind(ip, scope, dayStart()),
   ]);
   const done = new Set(voted.results.flatMap((v) => [`${v.winner_id}\n${v.loser_id}`, `${v.loser_id}\n${v.winner_id}`]));
-  const ids = all.results.map((r) => r.id);
-  let pair = null;
-  for (const { id: a } of low.results.sort(() => Math.random() - 0.5)) {
-    const others = ids.filter((b) => b !== a && !done.has(`${a}\n${b}`));
-    if (others.length) {
-      pair = [a, pick(others)];
-      break;
-    }
-  }
+  const pair = choosePair({ low: low.results.map((r) => r.id), ids: all.results.map((r) => r.id), done, keep, seen });
   if (!pair) return fail(503, "投票できる組み合わせが残っていません");
   // 左右の偏りを避ける
   const [left, right] = Math.random() < 0.5 ? pair : [pair[1], pair[0]];

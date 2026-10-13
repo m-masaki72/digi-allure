@@ -18,6 +18,7 @@ import {
   decodeParam,
   newRowId,
   readJSON,
+  choosePair,
 } from "../functions/_lib/api.js";
 
 const env = { VOTE_SECRET: "test-secret" };
@@ -178,4 +179,22 @@ test("clientIds: 日付が変わるとハッシュも変わる", async (t) => {
   const after = await clientIds(request, env);
   assert.notEqual(before.ip, after.ip);
   assert.notEqual(before.voter, after.voter);
+});
+
+test("choosePair: keep が公開中なら固定し、seen と投票済みの相手を避ける", () => {
+  const ids = ["a", "b", "c", "d"];
+  const done = new Set(["a\nb", "b\na"]);
+  for (let i = 0; i < 20; i++) {
+    const [x, y] = choosePair({ low: ["d"], ids, done, keep: "a", seen: ["c"] });
+    assert.equal(x, "a");
+    assert.equal(y, "d");
+  }
+});
+
+test("choosePair: seen しか残らなければ seen から、keep が使えなければ low から選ぶ", () => {
+  const done = new Set(["a\nb", "b\na"]);
+  assert.deepEqual(choosePair({ low: [], ids: ["a", "b", "c"], done, keep: "a", seen: ["c"] }), ["a", "c"]);
+  assert.equal(choosePair({ low: ["c"], ids: ["a", "b", "c"], done, keep: "zzz" })[0], "c");
+  const all = new Set(["a\nb", "b\na"]);
+  assert.equal(choosePair({ low: ["a", "b"], ids: ["a", "b"], done: all, keep: "a" }), null);
 });

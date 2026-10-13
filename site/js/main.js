@@ -17,7 +17,7 @@ async function route() {
   document.title = "デジアリュール — 選ばれし魅惑のデジモン図鑑（非公式）";
   const hash = location.hash.replace(/^#/, "") || "/";
   const [, page, arg] = hash.split("/");
-  const nav = { list: "list", d: "list", vote: "vote", ranking: "ranking", types: "types", my: "my", top5: "my" }[page ?? ""] ?? "";
+  const nav = { "": "home", list: "list", d: "list", types: "list", vote: "vote", my: "vote", top5: "vote", ranking: "ranking" }[page ?? ""] ?? "";
   document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
   window.scrollTo(0, 0);
   try {

@@ -72,6 +72,23 @@ export async function verifyPair(env, { scope, a, b, exp, token }) {
   return diff === 0;
 }
 
+// 対戦カードを選ぶ。keep（推し診断の勝ち残り）が公開中なら片方に固定し、相手は seen（直近に出した子）を避けて全体から選ぶ。
+// keep がなければ片方を対戦数の少ない子（low）から選ぶ。done は今日このIPで投票済みの組み合わせ（"a\nb" と "b\na" の両方）
+export function choosePair({ low, ids, done, keep = null, seen = [], random = Math.random }) {
+  const pick = (list) => list[Math.floor(random() * list.length)];
+  const opponents = (a) => ids.filter((b) => b !== a && !done.has(`${a}\n${b}`));
+  if (keep && ids.includes(keep)) {
+    const others = opponents(keep);
+    const fresh = others.filter((b) => !seen.includes(b));
+    if (others.length) return [keep, pick(fresh.length ? fresh : others)];
+  }
+  for (const a of [...low].sort(() => random() - 0.5)) {
+    const others = opponents(a);
+    if (others.length) return [a, pick(others)];
+  }
+  return null;
+}
+
 // 勝者側の変動量（敗者は同じ量だけ下がる）
 export function eloDelta(winnerElo, loserElo, k = ELO_K) {
   const expected = 1 / (1 + 10 ** ((loserElo - winnerElo) / 400));
