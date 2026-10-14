@@ -23,7 +23,7 @@ async function route() {
   try {
     if (page === "d") await viewDetail(decodeURIComponent(arg ?? ""));
     else if (page === "list") await viewList(arg === undefined ? undefined : decodeURIComponent(arg));
-    else if (page === "vote") await viewVote(arg === undefined ? undefined : decodeURIComponent(arg));
+    else if (page === "vote") await viewVote();
     else if (page === "ranking") await viewRanking(arg);
     else if (page === "types") await viewTypes();
     else if (page === "request") await viewRequest();

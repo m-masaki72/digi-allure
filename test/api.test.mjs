@@ -6,19 +6,17 @@ import {
   fail,
   clientIds,
   ipKey,
-  signPair,
-  verifyPair,
-  eloDelta,
+  signSort,
+  verifySort,
+  shuffle,
   monthKey,
   dayKey,
   dayStart,
-  monthScope,
   isMonthKey,
   monthRange,
   decodeParam,
   newRowId,
   readJSON,
-  choosePair,
 } from "../functions/_lib/api.js";
 
 const env = { VOTE_SECRET: "test-secret" };
@@ -40,14 +38,6 @@ test("json / fail: ステータス・ヘッダー・本文", async () => {
   const err = fail(429, "多すぎます");
   assert.equal(err.status, 429);
   assert.deepEqual(await err.json(), { error: "多すぎます" });
-});
-
-test("eloDelta: 同レートなら K/2、勝者と敗者の入れ替えで合計 K", () => {
-  assert.equal(eloDelta(1500, 1500), 16);
-  assert.equal(eloDelta(1500, 1500, 10), 5);
-  assert.ok(Math.abs(eloDelta(1600, 1400) + eloDelta(1400, 1600) - 32) < 1e-9);
-  assert.ok(eloDelta(1800, 1200) < 1);
-  assert.ok(eloDelta(1200, 1800) > 31);
 });
 
 test("ipKey: IPv4 はそのまま、IPv6 は /64 に丸める", () => {
@@ -97,8 +87,7 @@ test("monthRange: 日本時間の暦月の [開始, 終了) を UTC で返す", 
   assert.equal(monthKey(new Date(end)), "2026-03");
 });
 
-test("monthScope / isMonthKey", () => {
-  assert.equal(monthScope("2026-10"), "month:2026-10");
+test("isMonthKey", () => {
   assert.equal(isMonthKey("2026-10"), true);
   assert.equal(isMonthKey("2026-12"), true);
   assert.equal(isMonthKey("2026-00"), false);
@@ -128,30 +117,39 @@ test("readJSON: 壊れた JSON は null", async () => {
   assert.equal(await readJSON(post("{")), null);
 });
 
-test("signPair / verifyPair: 署名したペアだけ通る", async () => {
-  const { exp, token } = await signPair(env, "time-stranger", "a", "b");
+test("signSort / verifySort: 署名した並びだけ通る", async () => {
+  const ids = ["a", "b", "c"];
+  const { exp, token } = await signSort(env, "time-stranger", ids);
   assert.match(token, /^[0-9a-f]{64}$/);
   assert.ok(exp > Date.now());
 
-  const pair = { scope: "time-stranger", a: "a", b: "b", exp, token };
-  assert.equal(await verifyPair(env, pair), true);
-  assert.equal(await verifyPair(env, { ...pair, a: "b", b: "a" }), false);
-  assert.equal(await verifyPair(env, { ...pair, scope: "all" }), false);
-  assert.equal(await verifyPair(env, { ...pair, exp: exp + 1 }), false);
-  assert.equal(await verifyPair(env, { ...pair, token: token.replace(/^./, (c) => (c === "0" ? "1" : "0")) }), false);
-  assert.equal(await verifyPair(env, { ...pair, token: token.slice(1) }), false);
-  assert.equal(await verifyPair(env, { ...pair, token: undefined }), false);
-  assert.equal(await verifyPair({ VOTE_SECRET: "other" }, pair), false);
+  const sort = { scope: "time-stranger", ids, exp, token };
+  assert.equal(await verifySort(env, sort), true);
+  assert.equal(await verifySort(env, { ...sort, ids: ["b", "a", "c"] }), false);
+  assert.equal(await verifySort(env, { ...sort, ids: ["a", "b"] }), false);
+  assert.equal(await verifySort(env, { ...sort, ids: ["a,b", "c"] }), false);
+  assert.equal(await verifySort(env, { ...sort, ids: "a,b,c" }), false);
+  assert.equal(await verifySort(env, { ...sort, scope: "all" }), false);
+  assert.equal(await verifySort(env, { ...sort, exp: exp + 1 }), false);
+  assert.equal(await verifySort(env, { ...sort, token: token.replace(/^./, (c) => (c === "0" ? "1" : "0")) }), false);
+  assert.equal(await verifySort(env, { ...sort, token: token.slice(1) }), false);
+  assert.equal(await verifySort(env, { ...sort, token: undefined }), false);
+  assert.equal(await verifySort({ VOTE_SECRET: "other" }, sort), false);
 });
 
-test("verifyPair: 期限切れは不正", async (t) => {
-  const { exp, token } = await signPair(env, "all", "a", "b");
+test("verifySort: 期限切れは不正", async (t) => {
+  const { exp, token } = await signSort(env, "all", ["a", "b"]);
   t.mock.timers.enable({ apis: ["Date"], now: exp + 1 });
-  assert.equal(await verifyPair(env, { scope: "all", a: "a", b: "b", exp, token }), false);
+  assert.equal(await verifySort(env, { scope: "all", ids: ["a", "b"], exp, token }), false);
 });
 
 test("VOTE_SECRET 未設定はエラー", async () => {
-  await assert.rejects(signPair({}, "all", "a", "b"), /VOTE_SECRET/);
+  await assert.rejects(signSort({}, "all", ["a", "b"]), /VOTE_SECRET/);
+});
+
+test("shuffle: 要素はそのままで並びだけ変わる", () => {
+  const a = Array.from({ length: 20 }, (_, i) => String(i));
+  assert.deepEqual([...shuffle([...a])].sort(), [...a].sort());
 });
 
 test("clientIds: ip は IP だけ、voter は IP+UA で決まる", async (t) => {
@@ -179,22 +177,4 @@ test("clientIds: 日付が変わるとハッシュも変わる", async (t) => {
   const after = await clientIds(request, env);
   assert.notEqual(before.ip, after.ip);
   assert.notEqual(before.voter, after.voter);
-});
-
-test("choosePair: keep が公開中なら固定し、seen と投票済みの相手を避ける", () => {
-  const ids = ["a", "b", "c", "d"];
-  const done = new Set(["a\nb", "b\na"]);
-  for (let i = 0; i < 20; i++) {
-    const [x, y] = choosePair({ low: ["d"], ids, done, keep: "a", seen: ["c"] });
-    assert.equal(x, "a");
-    assert.equal(y, "d");
-  }
-});
-
-test("choosePair: seen しか残らなければ seen から、keep が使えなければ low から選ぶ", () => {
-  const done = new Set(["a\nb", "b\na"]);
-  assert.deepEqual(choosePair({ low: [], ids: ["a", "b", "c"], done, keep: "a", seen: ["c"] }), ["a", "c"]);
-  assert.equal(choosePair({ low: ["c"], ids: ["a", "b", "c"], done, keep: "zzz" })[0], "c");
-  const all = new Set(["a\nb", "b\na"]);
-  assert.equal(choosePair({ low: ["a", "b"], ids: ["a", "b"], done: all, keep: "a" }), null);
 });

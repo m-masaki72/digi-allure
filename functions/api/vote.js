@@ -1,81 +1,63 @@
-import { json, fail, scopeOf, verifyPair, clientIds, readJSON, monthKey, monthScope, dayStart, newRowId, ELO_K, DEFAULT_SCOPE } from "../_lib/api.js";
+import { json, fail, scopeOf, verifySort, clientIds, readJSON, dayStart, newRowId, RANK_POINTS } from "../_lib/api.js";
+import { TOP_N, replay, maxPicks } from "../../site/js/sort.js";
 
-// IPあたりの上限。学校・会社など1つのIPを大勢で使う場合も考えて1日の上限はゆるめ
-const MAX_VOTES_PER_MINUTE = 30;
-const MAX_VOTES_PER_DAY = 300;
+// IPあたりの診断結果の投票数。学校・会社など1つのIPを大勢で使う場合も考えて1日の上限はゆるめ
+const MAX_VOTES_PER_MINUTE = 3;
+const MAX_VOTES_PER_DAY = 20;
+const MAX_IDS = 2000;
 
-// ?1 ip ?2 scope ?3 a ?4 b ?5 1分前 ?6 今日の開始
-const CHECKS = `SELECT
-  (SELECT COUNT(*) FROM match_votes WHERE ip_hash = ?1 AND created_at >= ?5) AS recent,
-  (SELECT COUNT(*) FROM match_votes WHERE ip_hash = ?1 AND created_at >= ?6) AS today,
-  (SELECT COUNT(*) FROM ratings r JOIN digimon d ON d.id = r.digimon_id
-     WHERE r.game_scope = ?2 AND d.status = 'approved' AND r.digimon_id IN (?3, ?4)) AS found`;
+// ?1 ip ?2 1分前 ?3 今日の開始 ?4.. Top5 の ID
+const checksSql = (n) => `SELECT
+  (SELECT COUNT(DISTINCT vote_id) FROM top5_votes WHERE ip_hash = ?1 AND created_at >= ?2) AS recent,
+  (SELECT COUNT(DISTINCT vote_id) FROM top5_votes WHERE ip_hash = ?1 AND created_at >= ?3) AS today,
+  (SELECT COUNT(*) FROM digimon WHERE status = 'approved'
+     AND id IN (${Array.from({ length: n }, (_, i) => `?${i + 4}`).join(", ")})) AS found`;
 
-// 判定と記録を同じ文で行い、同時に届いた投票でも上限を超えないようにする。同じ組み合わせの重複は uq_match_votes_pair で弾く
-const INSERT_VOTE = `INSERT INTO match_votes (id, winner_id, loser_id, game_scope, voter_hash, ip_hash, created_at)
-  SELECT ?7, ?8, ?9, ?2, ?10, ?1, ?11 FROM (${CHECKS})
-  WHERE recent < ${MAX_VOTES_PER_MINUTE} AND today < ${MAX_VOTES_PER_DAY} AND found = 2
-  ON CONFLICT DO NOTHING`;
-
-// ?1 投票ID ?2 scope ?3 winner ?4 loser。投票が記録されたときだけ、その時点のレートから計算して反映する
-const ELO_UPDATE = `UPDATE ratings
-  SET elo = elo + CASE ratings.digimon_id WHEN ?3 THEN e.delta ELSE -e.delta END, matches = matches + 1
-  FROM (SELECT ${ELO_K} * (1 - 1 / (1 + pow(10, (l.elo - w.elo) / 400.0))) AS delta
-        FROM ratings w JOIN ratings l ON l.digimon_id = ?4 AND l.game_scope = ?2
-        WHERE w.digimon_id = ?3 AND w.game_scope = ?2) AS e
-  WHERE ratings.game_scope = ?2 AND ratings.digimon_id IN (?3, ?4) AND EXISTS (SELECT 1 FROM match_votes WHERE id = ?1)
-  RETURNING digimon_id, elo`;
-
-// 月間人気投票：同じ1票を今月のスコープにも反映する（行はその月の初対戦で作る）
-function monthlyUpdates(env, voteId, winner, loser, now) {
-  const month = monthScope(monthKey(now));
-  return [
-    env.DB.prepare(
-      `INSERT INTO ratings (digimon_id, game_scope) SELECT id, ?2 FROM digimon
-       WHERE id IN (?3, ?4) AND EXISTS (SELECT 1 FROM match_votes WHERE id = ?1)
-       ON CONFLICT(digimon_id, game_scope) DO NOTHING`
-    ).bind(voteId, month, winner, loser),
-    env.DB.prepare(ELO_UPDATE).bind(voteId, month, winner, loser),
-  ];
+// 判定と記録を同じ文で行い、同時に届いた投票でも上限を超えないようにする。同じ並びの二重投票は uq_top5_votes_token で弾く
+// ?1..?3 は checksSql と同じ、?4.. Top5 の ID、続けて vote_id, scope, token, voter, now
+function insertSql(n) {
+  const at = (k) => `?${n + 4 + k}`;
+  const rows = Array.from({ length: n }, (_, i) => `(${i + 1}, ?${i + 4}, ${RANK_POINTS[i]})`).join(", ");
+  return `INSERT INTO top5_votes (vote_id, rank, digimon_id, points, game_scope, sort_token, voter_hash, ip_hash, created_at)
+    SELECT ${at(0)}, v.column1, v.column2, v.column3, ${at(1)}, ${at(2)}, ${at(3)}, ?1, ${at(4)}
+    FROM (VALUES ${rows}) AS v, (${checksSql(n)}) AS c
+    WHERE c.recent < ${MAX_VOTES_PER_MINUTE} AND c.today < ${MAX_VOTES_PER_DAY} AND c.found = ${n}
+    ON CONFLICT DO NOTHING`;
 }
 
-// POST /api/vote  { scope, a, b, exp, token, winner }
+// POST /api/vote  { scope, ids, exp, token, history }
+// ids/exp/token は GET /api/sort が配った並び、history は診断で選んだ子のすべて。サーバーで再生して、最後まで終えた診断の Top5 だけを受け付ける
 export async function onRequestPost({ request, env }) {
   const body = await readJSON(request);
   if (!body) return fail(400, "JSON が不正です");
   const scope = scopeOf(body.scope);
-  const { a, b, winner } = body;
-  if (!scope || !a || !b || a === b || (winner !== a && winner !== b)) return fail(400, "パラメータが不正です");
-  if (!(await verifyPair(env, { scope, a, b, exp: body.exp, token: body.token }))) {
-    return fail(403, "対戦カードの有効期限が切れました。もう一度お試しください");
+  const { ids, history } = body;
+  if (!scope || !Array.isArray(ids) || ids.length < 2 || ids.length > MAX_IDS || new Set(ids).size !== ids.length
+    || !Array.isArray(history) || history.length > maxPicks(ids.length)) {
+    return fail(400, "パラメータが不正です");
   }
-  const loser = winner === a ? b : a;
+  if (!(body.exp > Date.now())) return fail(403, "推し診断の有効期限（24時間）が切れたため、ランキングには入りませんでした");
+  if (!(await verifySort(env, { scope, ids, exp: body.exp, token: body.token }))) return fail(403, "推し診断のデータが正しくありません");
+  let top;
+  try {
+    const s = replay(ids, history);
+    if (s.group || s.top.length !== Math.min(TOP_N, ids.length)) return fail(400, "推し診断がまだ終わっていません");
+    top = s.top;
+  } catch {
+    return fail(400, "選択の履歴が不正です");
+  }
+
   const { voter, ip } = await clientIds(request, env);
   const now = new Date();
-  const minuteAgo = new Date(now.getTime() - 60_000).toISOString();
-  const voteId = newRowId();
-
-  // 不正対策はIP単位で数える（同じIPを共有する人同士でも、同じ組み合わせは1日1票）
-  const [inserted, before, after] = await env.DB.batch([
-    env.DB.prepare(INSERT_VOTE)
-      .bind(ip, scope, a, b, minuteAgo, dayStart(now), voteId, winner, loser, voter, now.toISOString()),
-    env.DB.prepare("SELECT digimon_id, elo FROM ratings WHERE game_scope = ? AND digimon_id IN (?, ?)").bind(scope, winner, loser),
-    env.DB.prepare(ELO_UPDATE).bind(voteId, scope, winner, loser),
-    ...(scope === DEFAULT_SCOPE ? monthlyUpdates(env, voteId, winner, loser, now) : []),
-  ]);
+  const checks = [ip, new Date(now.getTime() - 60_000).toISOString(), dayStart(now), ...top];
+  const inserted = await env.DB.prepare(insertSql(top.length))
+    .bind(...checks, newRowId(), scope, body.token, voter, now.toISOString()).run();
   if (!inserted.meta.changes) {
-    const c = await env.DB.prepare(CHECKS).bind(ip, scope, a, b, minuteAgo, dayStart(now)).first();
-    if (c.found < 2) return fail(404, "対象のデジモンが見つかりません");
-    if (c.recent >= MAX_VOTES_PER_MINUTE) return fail(429, "投票が速すぎます。少し待ってからどうぞ");
-    if (c.today >= MAX_VOTES_PER_DAY) return fail(429, "今日の投票数の上限に達しました。また明日どうぞ");
-    return fail(409, "この組み合わせには今日すでに投票済みです");
+    const c = await env.DB.prepare(checksSql(top.length)).bind(...checks).first();
+    if (c.found < top.length) return fail(404, "非公開になった子が含まれているため、ランキングには入りませんでした");
+    if (c.recent >= MAX_VOTES_PER_MINUTE) return fail(429, "投票が続いたため、この結果はランキングに入りませんでした。少し待ってから診断してください");
+    if (c.today >= MAX_VOTES_PER_DAY) return fail(429, "今日この回線からの投票は上限に達したため、この結果はランキングに入りませんでした");
+    return fail(409, "この診断の結果はすでに投票済みです");
   }
-
-  const elo = (rows) => Object.fromEntries(rows.map((r) => [r.digimon_id, r.elo]));
-  const [old, cur] = [elo(before.results), elo(after.results)];
-  return json({
-    winner: { id: winner, elo: cur[winner] },
-    loser: { id: loser, elo: cur[loser] },
-    delta: cur[winner] - old[winner],
-  });
+  return json({ top: top.map((id, i) => ({ id, points: RANK_POINTS[i] })) });
 }

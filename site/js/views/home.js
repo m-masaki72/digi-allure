@@ -1,9 +1,10 @@
-import { state, navSeq, loadRanking, loadMonthly, publicRanking } from "../state.js";
+import { SCOPE, state, navSeq, loadRanking, loadMonthly, publicRanking } from "../state.js";
 import { app, esc, art, meta, monthLabel, detailHref, lineageHref, lineageGroups, cardHTML, creditOf } from "../ui.js";
-import { MY_MIN_VOTES, myVoteCount } from "../mine.js";
+import { myTop, resumableSort } from "../mine.js";
+import { GROUP, TOP_N, maxPicks } from "../sort.js";
 
 const RANK_N = 5;
-const FEW_VOTES = 30; // 今月の票がこれ未満ならランキングより投票の呼びかけを前に出す
+const FEW_VOTES = 10; // 今月の投票（診断の回数）がこれ未満ならランキングより投票の呼びかけを前に出す
 const PICKUP_N = 4;
 
 // 日本時間の日付ごとに決まる「今日の一体」
@@ -27,7 +28,9 @@ const miniCard = (d, label = "") => cardHTML(d,
 
 // hero: 今月1位（いなければ今日の一体）
 function heroHTML(hero, isTop, monthly) {
-  const n = myVoteCount((id) => state.byId.has(id));
+  const knows = (id) => state.byId.has(id);
+  const hasResult = myTop(knows).length > 0;
+  const resuming = !!resumableSort(SCOPE, knows);
   return `<section class="hero">
     <a class="hero-art" href="${detailHref(hero)}">${art(hero)}</a>
     <div class="hero-body">
@@ -35,10 +38,10 @@ function heroHTML(hero, isTop, monthly) {
       <div class="hero-name">${esc(hero.name)}</div>
       <div class="meta">${meta(hero)}</div>
       <p class="catch">天使か、魔王か。選ぶのはテイマーのあなた。</p>
-      <p>「どっちが好み？」を${MY_MIN_VOTES}問えらぶだけで、<b>あなたの推しTop5</b>がわかります。</p>
+      <p>${GROUP}体から好みの1体を選んでいくだけで、<b>あなたの推しTop${TOP_N}</b>が決まります（最大${maxPicks(state.list.length)}問・2〜3分）。</p>
       <div class="actions">
-        <a class="btn primary" href="#/vote">推し診断をはじめる（${MY_MIN_VOTES}問）</a>
-        ${n >= MY_MIN_VOTES ? '<a class="btn" href="#/my">前回の診断結果を見る</a>' : '<a class="btn" href="#/list">図鑑を見る</a>'}
+        <a class="btn primary" href="#/vote">${resuming ? "推し診断の続きから" : "推し診断をはじめる"}</a>
+        ${hasResult ? '<a class="btn" href="#/my">前回の診断結果を見る</a>' : '<a class="btn" href="#/list">図鑑を見る</a>'}
       </div>
     </div>
   </section>`;
@@ -46,7 +49,7 @@ function heroHTML(hero, isTop, monthly) {
 
 // 目的別の入口（推しを知る／好みの系統から探す／みんなの人気を見る）
 const ENTRIES = [
-  ["#/vote", "推し診断", `2択を${MY_MIN_VOTES}問えらぶだけで、あなたの推しTop5がわかります`, true],
+  ["#/vote", "推し診断", `${GROUP}択で絞り込んで、あなたの推しTop${TOP_N}を決めます`, true],
   ["#/types", "系統から探す", "天使・魔王・妖精…好みの系統や雰囲気から探せます"],
   ["#/ranking", "人気ランキング", "今月いちばん推されているのはだれ？"],
 ];
@@ -57,7 +60,7 @@ const entriesHTML = () => `<nav class="entries" aria-label="目的から選ぶ">
 function rankSectionHTML(rows, votes) {
   if (votes >= FEW_VOTES) return rankHTML(rows, RANK_N);
   return `<div class="cta-card">
-    <p><b>今月の人気投票は始まったばかり</b>（いま ${votes} 票）。推し診断の1問が、そのまま1票になります。</p>
+    <p><b>今月の人気投票は始まったばかり</b>（いま ${votes} 人分）。推し診断で決まったTop${TOP_N}が、そのまま票になります。</p>
     <a class="btn primary" href="#/vote">推し診断で投票する</a>
   </div>${rows.length ? rankHTML(rows, 3) : ""}`;
 }
@@ -66,22 +69,22 @@ function rankHTML(rows, n) {
   return `<ol class="ranklist">${rows.slice(0, n).map((r) => {
     const d = state.byId.get(r.id);
     const credit = creditOf(d);
-    return `<li><a href="${detailHref(d)}"><span class="pos">${r.rank}</span>${art(d)}<span class="name">${esc(d.name)}</span><span class="sub">${r.wins}勝 / ${r.matches}戦</span>${credit ? `<span class="credit-line">${esc(credit)}</span>` : ""}</a></li>`;
+    return `<li><a href="${detailHref(d)}"><span class="pos">${r.rank}</span>${art(d)}<span class="name">${esc(d.name)}</span><span class="sub">${r.points}点</span>${credit ? `<span class="credit-line">${esc(credit)}</span>` : ""}</a></li>`;
   }).join("")}</ol>`;
 }
 
-// 今日の一体（hero に出ていなければ先頭）と、対戦数が少ない子を優先して出す（ランキングの偏りを減らす）
+// 今日の一体（hero に出ていなければ先頭）と、Top5 入りが少ない子を優先して出す（ランキングの偏りを減らす）
 function pickupHTML(ranking, hero) {
   const today = todaysPick();
   const head = today === hero ? [] : [miniCard(today, "今日の一体")];
   const pool = shuffle(state.list.filter((d) => d !== today && d !== hero))
-    .sort((a, b) => (ranking?.get(a.id)?.matches ?? 0) - (ranking?.get(b.id)?.matches ?? 0));
+    .sort((a, b) => (ranking?.get(a.id)?.entries ?? 0) - (ranking?.get(b.id)?.entries ?? 0));
   return `<div class="grid">${head.join("")}${pool.slice(0, PICKUP_N - head.length).map((d) => miniCard(d)).join("")}</div>`;
 }
 
-// 系統の顔は通算レートが一番高い子。票がなければ図鑑No.が一番大きい子（後半の世代ほど女性型が多い）
+// 系統の顔は通算の得点が一番高い子。票がなければ図鑑No.が一番大きい子（後半の世代ほど女性型が多い）
 function representative(list, ranking) {
-  const score = (d) => [ranking?.get(d.id)?.matches ? ranking.get(d.id).elo : -Infinity, d.no ?? -Infinity];
+  const score = (d) => [ranking?.get(d.id)?.points ?? -Infinity, d.no ?? -Infinity];
   return list.reduce((best, d) => {
     const [a, b] = [score(d), score(best)];
     return a[0] > b[0] || (a[0] === b[0] && a[1] > b[1]) ? d : best;
@@ -102,7 +105,7 @@ export async function viewHome() {
   }
   const render = (monthly, ranking) => {
     const rows = publicRanking(monthly);
-    const votes = Math.round(rows.reduce((s, r) => s + r.matches, 0) / 2);
+    const votes = monthly?.votes ?? 0;
     const isTop = rows.length > 0 && votes >= FEW_VOTES;
     const hero = isTop ? state.byId.get(rows[0].id) : todaysPick();
     app.innerHTML = `

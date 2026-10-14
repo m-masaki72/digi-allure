@@ -6,7 +6,7 @@ export const state = {
   list: [],
   byId: new Map(),
   tags: null,      // { tags: [...], counts: [...] } API が使えないときは null
-  ranking: null,   // Map(id -> { rank, elo, matches, wins }) 通算
+  ranking: null,   // Map(id -> { rank, points, firsts, entries }) 通算
   monthly: null,   // 今月の人気投票（バナー用）
   candidates: null, // 未掲載デジモン（リクエスト用）
   filters: { q: "", levels: new Set(), lineage: "", type: "", tag: "", sort: "no" },
@@ -31,7 +31,7 @@ export const tagLabels = () => indexTags().labels;
 export const tagCounts = (id) => indexTags().byId.get(id) ?? [];
 
 export const withRank = (ranking) => ranking.map((r, i) => ({ ...r, rank: i + 1 }));
-// 月間ランキングのうち公開中の子だけ（API は対戦0の子を返さない）
+// 月間ランキングのうち公開中の子だけ（API は得点0の子を返さない）
 export const publicRanking = (monthly) => withRank(monthly?.ranking ?? []).filter((r) => state.byId.has(r.id));
 export const setRanking = (ranking) => (state.ranking = new Map(withRank(ranking).map((r) => [r.id, r])));
 

@@ -2,8 +2,9 @@
 
 export const SCOPES = ["time-stranger", "all"];
 export const DEFAULT_SCOPE = "time-stranger";
-export const ELO_K = 32;
-const PAIR_TTL_MS = 30 * 60 * 1000;
+const SORT_TTL_MS = 24 * 60 * 60 * 1000; // 推し診断を途中でやめても、翌日の同じ頃までは続きから投票できる
+// 推し診断の Top5 に入れる点（1位から順に）
+export const RANK_POINTS = [10, 5, 3, 2, 1];
 
 export function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -58,41 +59,27 @@ export function ipKey(ip) {
   return `${prefix.map((g) => parseInt(g, 16).toString(16)).join(":")}::/64`;
 }
 
-// サーバーが出したペアにだけ投票できるよう署名する
-export async function signPair(env, scope, a, b) {
-  const exp = Date.now() + PAIR_TTL_MS;
-  return { exp, token: await hmac(secretOf(env), `pair:${scope}|${a}|${b}|${exp}`) };
+// 推し診断の並び順（勝ち抜き木の葉）に署名する。投票時は選択の履歴をこの並びで再生し、この並びから決まった Top5 だけを受け付ける
+export async function signSort(env, scope, ids) {
+  const exp = Date.now() + SORT_TTL_MS;
+  return { exp, token: await hmac(secretOf(env), `sort:${scope}|${ids.join(",")}|${exp}`) };
 }
-export async function verifyPair(env, { scope, a, b, exp, token }) {
+export async function verifySort(env, { scope, ids, exp, token }) {
   if (typeof token !== "string" || !Number.isFinite(exp) || exp < Date.now()) return false;
-  const expect = await hmac(secretOf(env), `pair:${scope}|${a}|${b}|${exp}`);
+  if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string" || id.includes(","))) return false;
+  const expect = await hmac(secretOf(env), `sort:${scope}|${ids.join(",")}|${exp}`);
   if (expect.length !== token.length) return false;
   let diff = 0;
   for (let i = 0; i < expect.length; i++) diff |= expect.charCodeAt(i) ^ token.charCodeAt(i);
   return diff === 0;
 }
 
-// 対戦カードを選ぶ。keep（推し診断の勝ち残り）が公開中なら片方に固定し、相手は seen（直近に出した子）を避けて全体から選ぶ。
-// keep がなければ片方を対戦数の少ない子（low）から選ぶ。done は今日このIPで投票済みの組み合わせ（"a\nb" と "b\na" の両方）
-export function choosePair({ low, ids, done, keep = null, seen = [], random = Math.random }) {
-  const pick = (list) => list[Math.floor(random() * list.length)];
-  const opponents = (a) => ids.filter((b) => b !== a && !done.has(`${a}\n${b}`));
-  if (keep && ids.includes(keep)) {
-    const others = opponents(keep);
-    const fresh = others.filter((b) => !seen.includes(b));
-    if (others.length) return [keep, pick(fresh.length ? fresh : others)];
+export function shuffle(a, random = Math.random) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  for (const a of [...low].sort(() => random() - 0.5)) {
-    const others = opponents(a);
-    if (others.length) return [a, pick(others)];
-  }
-  return null;
-}
-
-// 勝者側の変動量（敗者は同じ量だけ下がる）
-export function eloDelta(winnerElo, loserElo, k = ELO_K) {
-  const expected = 1 / (1 + 10 ** ((loserElo - winnerElo) / 400));
-  return k * (1 - expected);
+  return a;
 }
 
 // 月間人気投票の区切りは日本時間
@@ -101,7 +88,6 @@ export const monthKey = (date = new Date()) => new Date(date.getTime() + JST_MS)
 export const dayKey = (date = new Date()) => new Date(date.getTime() + JST_MS).toISOString().slice(0, 10);
 // その日（日本時間）の開始を UTC の ISO 文字列で返す
 export const dayStart = (date = new Date()) => new Date(Date.parse(dayKey(date)) - JST_MS).toISOString();
-export const monthScope = (key) => `month:${key}`;
 export const isMonthKey = (s) => typeof s === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
 // その月の [開始, 終了) を UTC の ISO 文字列で返す（created_at との比較用）
 export function monthRange(key) {

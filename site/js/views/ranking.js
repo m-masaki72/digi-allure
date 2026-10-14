@@ -20,30 +20,31 @@ export async function viewRanking(arg) {
   else if (!month) state.monthly = data;
   if (seq !== navSeq) return;
   const rows = withRank(data.ranking).filter((r) => state.byId.has(r.id));
-  const total = rows.reduce((s, r) => s + r.matches, 0) / 2;
+  const total = data.votes ?? 0;
   const shown = isAll ? "all" : data.month;
   const tabs = [[data.current, `${monthLabel(data.current)}（開催中）`], ["all", "通算"],
     ...data.months.filter((m) => m !== data.current).map((m) => [m, `${monthLabel(m)}（確定）`])];
   const lead = isAll
-    ? `サイト開設からの推し診断の票をすべて集計した通算ランキングです（累計 ${Math.round(total)} 票）。`
+    ? `サイト開設からの推し診断の票をすべて集計した通算ランキングです（累計 ${total} 人分）。`
     : data.final
-      ? `${monthLabel(data.month)}の人気投票の確定結果です（${Math.round(total)} 票）。`
-      : `${monthLabel(data.month)}の人気投票を開催中です。毎月1日（日本時間）にリセットされ、月末の順位がその月の結果になります（現在 ${Math.round(total)} 票）。`;
+      ? `${monthLabel(data.month)}の人気投票の確定結果です（${total} 人分）。`
+      : `${monthLabel(data.month)}の人気投票を開催中です。毎月1日（日本時間）にリセットされ、月末の順位がその月の結果になります（現在 ${total} 人分）。`;
   app.innerHTML = `
     <h1>人気ランキング</h1>
     <div class="tabs">${tabs.map(([k, label]) => `<a class="tab${k === shown ? " on" : ""}" href="#/ranking/${k === data.current ? "" : k}">${esc(label)}</a>`).join("")}</div>
-    <p class="lead">${lead}対戦数が少ないうちは順位が大きく動きます。</p>
+    <p class="lead">${lead}推し診断のTop5に1位10点・2位5点・3位3点・4位2点・5位1点が入ります。票が少ないうちは順位が大きく動きます。</p>
     ${rows.length ? "" : '<p class="empty">まだ投票がありません。最初の1票をどうぞ！</p>'}
     <table class="rank"${rows.length ? "" : " hidden"}>
-      <thead><tr><th>順位</th><th>デジモン</th><th>世代・タイプ</th><th class="num">対戦</th><th class="num">勝率</th></tr></thead>
+      <thead><tr><th>順位</th><th>デジモン</th><th>世代・タイプ</th><th class="num">得点</th><th class="num">1位</th><th class="num">Top5入り</th></tr></thead>
       <tbody>${rows.map((r) => {
         const d = state.byId.get(r.id);
         return `<tr class="${r.rank <= 3 ? "top" : ""}">
           <td>${r.rank}</td>
           <td><a href="${detailHref(d)}">${esc(d.name)}</a></td>
           <td>${esc(d.level)}・${esc(d.type)}</td>
-          <td class="num">${r.matches}</td>
-          <td class="num">${r.matches ? Math.round((r.wins / r.matches) * 100) + "%" : "—"}</td>
+          <td class="num">${r.points}</td>
+          <td class="num">${r.firsts}</td>
+          <td class="num">${r.entries}</td>
         </tr>`;
       }).join("")}</tbody>
     </table>

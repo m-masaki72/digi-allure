@@ -1,8 +1,11 @@
-import { state } from "../state.js";
-import { app, esc, art, meta, cardHTML, detailHref, toast } from "../ui.js";
-import { MY_MIN_VOTES, TOP_N, myRanking, clearMyVotes } from "../mine.js";
+import { SCOPE, state } from "../state.js";
+import { app, esc, art, meta, cardHTML, detailHref, toast, creditOf } from "../ui.js";
+import { myResult, clearMyTop, resumableSort } from "../mine.js";
+import { GROUP, TOP_N, maxPicks } from "../sort.js";
 
 const SITE_URL = "https://digi-allure.pages.dev/";
+const knows = (id) => state.byId.has(id);
+const quizSize = () => `${GROUP}択・最大${maxPicks(state.list.length)}問・2〜3分`;
 
 function podiumHTML(list, start = 1) {
   return `<ol class="podium${start > 1 ? " rest" : ""}">${list.map((d, i) => `<li>${cardHTML(d, `<div class="no">${i + start}位</div><div class="name">${esc(d.name)}</div>`)}</li>`).join("")}</ol>`;
@@ -10,55 +13,65 @@ function podiumHTML(list, start = 1) {
 
 function shareURL(top) {
   const url = `${SITE_URL}#/top5/${top.map((d) => encodeURIComponent(d.id)).join(",")}`;
-  const text = `わたしの推し魅惑デジモンTop5\n${top.map((d, i) => `${i + 1}. ${d.name}`).join("\n")}\n#デジアリュール`;
+  const text = `わたしの推し魅惑デジモンTop${top.length}\n${top.map((d, i) => `${i + 1}. ${d.name}`).join("\n")}\n#デジアリュール`;
   return { url, intent: `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}` };
+}
+
+const dateLabel = (iso) => {
+  const t = Date.parse(iso ?? "");
+  if (!Number.isFinite(t)) return "";
+  const d = new Date(t + 9 * 3600e3);
+  return `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+};
+
+function voteHTML(vote) {
+  if (!vote) return "";
+  return vote.ok
+    ? `<p class="vote-status ok">このTop${TOP_N}は今月の人気投票に入りました（1位10点・2位5点・3位3点・4位2点・5位1点）。</p>`
+    : `<p class="vote-status">${esc(vote.message)}</p>`;
+}
+
+// スクリーンショットでそのままシェアできるよう、題・順位・サイト名を1枚に収める
+// 2位以下の画像は小さく出典ラベルが収まらないので、カードの下にまとめて出す
+function resultCardHTML(top, at) {
+  const [first, ...rest] = top;
+  const credits = [...new Set(rest.map(creditOf).filter(Boolean))];
+  return `<section class="result-card">
+    <div class="rc-head"><span class="rc-title">わたしの推し魅惑デジモン Top${top.length}</span><span class="rc-date">${esc(dateLabel(at))}</span></div>
+    <a class="rc-first" href="${detailHref(first)}">${art(first)}<div class="rc-first-body"><div class="rc-rank">1位</div><div class="rc-name">${esc(first.name)}</div><div class="meta">${meta(first)}</div></div></a>
+    ${rest.length ? `<ol class="rc-rest">${rest.map((d, i) => `<li><a href="${detailHref(d)}">${art(d)}<span class="rc-rank">${i + 2}位</span><span class="rc-name">${esc(d.name)}</span></a></li>`).join("")}</ol>` : ""}
+    ${credits.length ? `<div class="rc-credit">${credits.map(esc).join("／")}</div>` : ""}
+    <div class="rc-foot"><b>デジアリュール</b> 選ばれし魅惑のデジモン図鑑<span>digi-allure.pages.dev</span></div>
+  </section>`;
 }
 
 // ---------- あなたのTop5 ----------
 export function viewMy() {
   document.title = "推し診断の結果 — デジアリュール";
-  const { votes: n, rows: ranked } = myRanking((id) => state.byId.has(id));
-  if (n < MY_MIN_VOTES) {
+  const result = myResult(knows);
+  if (!result) {
+    const resuming = !!resumableSort(SCOPE, knows);
     app.innerHTML = `
       <h1>推し診断の結果</h1>
-      <p class="lead">推し診断（2択 ${MY_MIN_VOTES}問）でえらんだ結果から、あなただけの推しTop5を作ります。記録はこの端末のブラウザにだけ保存されます。</p>
-      <p class="progress">あと <b>${MY_MIN_VOTES - n}</b> 問で結果が出ます（いま ${n} 問）</p>
-      <div class="actions"><a class="btn primary" href="#/vote">推し診断をはじめる</a></div>`;
+      <p class="lead">${GROUP}体から1体を選ぶのをくり返して、あなただけの推しTop${TOP_N}を決めます（${quizSize()}）。結果はこの端末のブラウザにだけ保存されます。</p>
+      <div class="actions"><a class="btn primary" href="#/vote">${resuming ? "推し診断の続きから" : "推し診断をはじめる"}</a></div>`;
     return;
   }
-  const rows = ranked.map((r) => ({ ...r, d: state.byId.get(r.id) }));
-  const top = rows.slice(0, TOP_N).map((r) => r.d);
+  const top = result.top.map((id) => state.byId.get(id));
   const share = shareURL(top);
-  const [first, ...rest] = top;
   app.innerHTML = `
-    <section class="hero result">
-      <a class="hero-art" href="${detailHref(first)}">${art(first)}</a>
-      <div class="hero-body">
-        <div class="hero-label">推し診断の結果</div>
-        <p class="result-lead">あなたの推しNo.1は…</p>
-        <div class="hero-name">${esc(first.name)}</div>
-        <div class="meta">${meta(first)}</div>
-        <div class="actions">
-          <a class="btn primary" href="${esc(share.intent)}" target="_blank" rel="noopener">結果を X でシェア</a>
-          <button class="btn" id="copy">リンクをコピー</button>
-        </div>
-      </div>
-    </section>
-    <h2>2位〜${TOP_N}位</h2>
-    ${podiumHTML(rest, 2)}
-    <p class="lead">あなたの ${n} 票から作った推しランキングです。診断を重ねるほど順位が正確になります。</p>
-    <div class="actions">
-      <a class="btn primary" href="#/vote">もう${MY_MIN_VOTES}問 診断する</a>
-      <a class="btn" href="${detailHref(first)}">${esc(first.name)} をくわしく見る</a>
+    <h1>推し診断の結果</h1>
+    ${resultCardHTML(top, result.at)}
+    <div class="actions result-actions">
+      <a class="btn primary" href="${esc(share.intent)}" target="_blank" rel="noopener">結果を X でシェア</a>
+      <button class="btn" id="copy">リンクをコピー</button>
     </div>
-    <h2>あなたの全順位</h2>
-    <table class="rank">
-      <thead><tr><th>順位</th><th>デジモン</th><th class="num">対戦</th><th class="num">勝ち</th></tr></thead>
-      <tbody>${rows.map((r, i) => `<tr class="${i < 3 ? "top" : ""}">
-        <td>${i + 1}</td><td><a href="${detailHref(r.d)}">${esc(r.d.name)}</a></td>
-        <td class="num">${r.matches}</td><td class="num">${r.wins}</td></tr>`).join("")}</tbody>
-    </table>
-    <p class="lead small">この記録はこの端末のブラウザだけに保存されています。<button class="linkish" id="reset">記録を消す</button></p>`;
+    ${voteHTML(result.vote)}
+    <div class="actions result-actions">
+      <a class="btn" href="#/vote">もう一度診断する</a>
+      <a class="btn" href="#/ranking">みんなのランキングを見る</a>
+    </div>
+    <p class="lead small">この結果はこの端末のブラウザだけに保存されています。<button class="linkish" id="reset">結果を消す</button></p>`;
   document.getElementById("copy").addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(share.url);
@@ -68,8 +81,8 @@ export function viewMy() {
     }
   });
   document.getElementById("reset").addEventListener("click", () => {
-    if (!confirm("あなたのTop5の記録を消します。よろしいですか？（ランキングへの投票は消えません）")) return;
-    clearMyVotes();
+    if (!confirm("あなたのTop5の結果を消します。よろしいですか？（ランキングへの投票は消えません）")) return;
+    clearMyTop();
     viewMy();
   });
 }
@@ -81,9 +94,10 @@ export function viewSharedTop(arg) {
     .map((id) => state.byId.get(id)).filter(Boolean).slice(0, TOP_N);
   document.title = "推しTop5 — デジアリュール";
   app.innerHTML = top.length ? `
-    <h1>だれかの推しTop5</h1>
-    <p class="lead">推し診断でえらばれた、だれかの推し魅惑デジモンです。</p>
+    <h1>だれかの推しTop${top.length}</h1>
+    <p class="lead">推し診断で選ばれた、だれかの推し魅惑デジモンです。</p>
     ${podiumHTML(top)}
-    <div class="actions"><a class="btn primary" href="#/vote">あなたも推し診断する</a><a class="btn" href="#/">トップへ</a></div>`
+    <div class="actions"><a class="btn primary" href="#/vote">あなたも推し診断する</a><a class="btn" href="#/">トップへ</a></div>
+    <p class="lead small">推し診断は${quizSize()}。直感で選ぶだけで、あなたの推しTop${TOP_N}が決まります。</p>`
     : '<p class="empty">このTop5は表示できません。<a href="#/vote">推し診断をする</a></p>';
 }

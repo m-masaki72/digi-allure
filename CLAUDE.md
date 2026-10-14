@@ -32,7 +32,7 @@ python3 -I -X utf8 -m unittest discover -s scripts/tests -t scripts   # build_da
 
 フロントは `site/` のビルド不要な vanilla JS SPA（hash ルーティング、ES modules）。入口は `site/js/main.js`（ルーター）、画面ごとに `site/js/views/*.js`、共有状態とデータ読み込みは `site/js/state.js`、描画ヘルパは `site/js/ui.js`、fetch は `site/js/api.js`、「あなたのTop5」用の自分の票（localStorage）は `site/js/mine.js`。非同期処理の後は `seq === navSeq` を確かめて古い画面への書き込みを捨てる（`navSeq` は `state.js` の `beginNav()` だけが進める）。
 
-API は `functions/api/` の Pages Functions で、共通処理は `functions/_lib/api.js`（Elo、対戦カードの HMAC 署名、日替わりソルトのハッシュ、JST の日・月区切り、IPv6 の /64 まとめ）。スキーマは `db/migrations/`（wrangler の D1 マイグレーション）で管理する。
+API は `functions/api/` の Pages Functions で、共通処理は `functions/_lib/api.js`（推し診断の並び順の HMAC 署名と Top5 の配点、日替わりソルトのハッシュ、JST の日・月区切り、IPv6 の /64 まとめ）。スキーマは `db/migrations/`（wrangler の D1 マイグレーション）で管理する。
 
 ## 制約
 
@@ -42,7 +42,7 @@ API は `functions/api/` の Pages Functions で、共通処理は `functions/_l
 - `functions/_lib/` には `onRequest*` を export しない（export するとルートとして公開される）
 - `site/js/` は無ハッシュの ES modules なので、`_headers` で `/js/*` に長期キャッシュを付けない（デプロイ直後に新旧モジュールが混ざる）
 - POST は `functions/api/_middleware.js` が `Content-Type: application/json` と同一オリジンを要求する
-- `VOTE_SECRET` は本番環境にしか登録していない（`wrangler pages secret put` はプレビュー環境を指定できない）。プレビューのデプロイでは投票が失敗する
+- `VOTE_SECRET` は本番環境にしか登録していない（`wrangler pages secret put` はプレビュー環境を指定できない）。プレビューのデプロイでは `/api/sort` が失敗し、推し診断は投票なしの端末だけのモードになる
 - 公式・Game8 の画像や説明文は転載しない（`docs/HANDOVER.md` §3）。公式画像は直リンク表示と出典ラベルだけにする
 
 ## 運用

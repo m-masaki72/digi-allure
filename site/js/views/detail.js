@@ -1,6 +1,8 @@
 import { api } from "../api.js";
-import { state, navSeq, loadRanking } from "../state.js";
+import { SCOPE, state, navSeq, loadRanking } from "../state.js";
 import { app, esc, art, toast, detailHref, lineageHref } from "../ui.js";
+import { TOP_N } from "../sort.js";
+import { resumableSort } from "../mine.js";
 
 const OFFICIAL_URL = "https://digimon.net/reference/detail.php?directory_name=";
 const SIMILAR_N = 6;
@@ -27,7 +29,7 @@ function tagButtons(tags) {
     .join("")}</div>`).join("");
 }
 
-const rankHTML = (rank) => rank ? `<dt>人気</dt><dd>通算 ${rank.rank}位（${rank.matches}戦 ${rank.wins}勝）</dd>` : "";
+const rankHTML = (rank) => rank ? `<dt>人気</dt><dd>通算 ${rank.rank}位（${rank.points}点・1位${rank.firsts}回）</dd>` : "";
 
 export async function viewDetail(id) {
   const seq = navSeq;
@@ -43,7 +45,7 @@ export async function viewDetail(id) {
       <div class="detail-art">
         ${art(d)}
         <div class="actions">
-          <a class="btn primary" href="#/vote/${encodeURIComponent(d.id)}">この子で推し診断</a>
+          <a class="btn primary" href="#/vote">${resumableSort(SCOPE, (x) => state.byId.has(x)) ? "推し診断の続きから" : `推し診断で Top${TOP_N} を決める`}</a>
           ${d.game8_id ? `<a class="btn" href="${esc(game8URL(d))}" target="_blank" rel="noopener">入手方法（Game8）</a>` : ""}
         </div>
       </div>
